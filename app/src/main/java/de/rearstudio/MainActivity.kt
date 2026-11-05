@@ -47,7 +47,7 @@ class MainActivity:AppCompatActivity(){
         val links=StudioUi.card(this,body);StudioUi.button(this,links,t("wallpaper_charging")){startActivity(Intent(this,DisplayActivity::class.java))};StudioUi.button(this,links,t("content")){page=2;render()}
         status=StudioUi.label(this,"",12f,true);body.addView(status);refreshStatus()
     }
-    private fun content(){StudioUi.title(this,body,"your_content");val choices=LinearLayout(this);body.addView(choices);listOf("music","sport","notifications").forEachIndexed{i,key->val box=StudioUi.column(this);choices.addView(box,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,box,t(key),contentTab==i){contentTab=i;render()}.textSize=12f}
+    private fun content(){StudioUi.title(this,body,"your_content");val choices=LinearLayout(this);body.addView(choices);listOf("music","sport","notifications").forEachIndexed{i,key->val box=StudioUi.column(this);choices.addView(box,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,box,t(key),contentTab==i){contentTab=i;render()}.apply{maxLines=1;setPadding(0,0,0,0);setAutoSizeTextTypeUniformWithConfiguration(8,12,1,android.util.TypedValue.COMPLEX_UNIT_SP)}}
         when(contentTab){0->music();1->{sport=SportsPanel(this,body)};else->notifications()}
     }
     private fun music(){val preview=RearPreview(this);body.addView(preview,LinearLayout.LayoutParams(-1,-2).apply{topMargin=StudioUi.dp(this@MainActivity,20)});val scene=StudioScene.defaults();scene.profile("normal").widgets.clear();scene.profile("normal").widgets.add(StudioWidget(kind="music",x=.05f,y=.08f,w=.9f,h=.84f));musicCanvas=StudioCanvas(this).apply{this.scene=scene;forcedProfile="normal"};preview.addView(musicCanvas,FrameLayout.LayoutParams(-1,-1))

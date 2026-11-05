@@ -50,8 +50,8 @@ class EditorActivity:AppCompatActivity(){
     }
     private fun remember(){history.addLast(scene.json());while(history.size>25)history.removeFirst()}
     private fun changed(mark:Boolean=true){if(mark)dirty=true;canvas.scene=scene;canvas.selected=selected;canvas.invalidate();if(live)preview()}
-    private fun preview(){getSharedPreferences("studio",0).edit().putString("preview",scene.json()).putString("preview_profile",profile).putLong("preview_time",System.currentTimeMillis()).apply()}
-    private fun clearPreview(){getSharedPreferences("studio",0).edit().remove("preview").remove("preview_profile").apply()}
+    private fun preview(){de.rearstudio.rear.RearHostActivity.previewLit(true);getSharedPreferences("studio",0).edit().putString("preview",scene.json()).putString("preview_profile",profile).putLong("preview_time",System.currentTimeMillis()).apply()}
+    private fun clearPreview(){de.rearstudio.rear.RearHostActivity.previewLit(false);getSharedPreferences("studio",0).edit().remove("preview").remove("preview_profile").apply()}
     private fun leave(){if(!dirty){finish();return};MaterialAlertDialogBuilder(this).setTitle(t("discard_title")).setNegativeButton(t("cancel"),null).setPositiveButton(t("discard")){_,_->finish()}.show()}
     private fun toast(key:String){Toast.makeText(this,t(key),Toast.LENGTH_LONG).show()}
     private fun switch(parent:LinearLayout,key:String,value:Boolean,change:(Boolean)->Unit){parent.addView(Switch(this).apply{text=t(key);setTextColor(StudioUi.TEXT);setPadding(0,StudioUi.dp(this@EditorActivity,8),0,StudioUi.dp(this@EditorActivity,8));isChecked=value;setOnCheckedChangeListener{_,v->remember();change(v);changed()}})}

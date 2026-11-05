@@ -639,7 +639,7 @@ class RearHostActivity : Activity() {
      * Only the wallpaper's, never a pop-over's.
      */
     private fun applyKeepLit() {
-        if (keepLitWanted) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (keepLitWanted || previewLitWanted) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
@@ -822,6 +822,7 @@ class RearHostActivity : Activity() {
 
         // Stay fully lit while unlocked, as DisplayKeeper last said, for this host and the next.
         private var keepLitWanted = false
+        private var previewLitWanted = false
 
         private fun showing() = current?.get()?.takeIf { !it.isFinishing && it.onRear }
 
@@ -843,6 +844,12 @@ class RearHostActivity : Activity() {
         /** Stay fully lit while unlocked started or ended ([de.rearstudio.core.DisplayKeeper]). */
         fun keepLit(on: Boolean) {
             keepLitWanted = on
+            showingWallpaper()?.applyKeepLit()
+        }
+
+        /** Only while a visible Studio editor owns a live draft. */
+        fun previewLit(on: Boolean) {
+            previewLitWanted = on
             showingWallpaper()?.applyKeepLit()
         }
 
