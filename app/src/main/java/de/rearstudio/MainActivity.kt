@@ -1,6 +1,9 @@
 package de.rearstudio
 
 import android.app.Activity
+import android.app.NotificationManager
+import android.app.AlertDialog
+import android.net.Uri
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Color
@@ -35,6 +38,11 @@ class MainActivity : Activity() {
     private lateinit var previous: Button
     private lateinit var next: Button
     private lateinit var sports: SportsPanel
+    private lateinit var musicAccess: TextView
+    private lateinit var rearStatus: TextView
+    private lateinit var rearStart: Button
+    private var rearBusy = false
+    private val rearWorker = java.util.concurrent.Executors.newSingleThreadExecutor()
     private val preferences by lazy { getSharedPreferences("design", MODE_PRIVATE) }
     private val permissionListener = Shizuku.OnRequestPermissionResultListener { _, _ -> refreshStatus() }
     private val binderListener = Shizuku.OnBinderReceivedListener { refreshStatus() }
@@ -172,12 +180,25 @@ class MainActivity : Activity() {
             override fun onStartTrackingTouch(bar: SeekBar?) {}
             override fun onStopTrackingTouch(bar: SeekBar?) {}
         }); design.addView(slider); safe(slider.progress + 20)
+        val quickSetup = card(musicPage)
+        quickSetup.addView(label("Musik einrichten", 18f))
+        musicAccess = label("", 14f); quickSetup.addView(musicAccess)
+        button("Musikzugriff erlauben", quickSetup) { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
+        quickSetup.addView(label("YouTube Music oder Spotify öffnen und einen Titel abspielen. Danach hierher zurückkehren. Wir verwenden die Android-Mediensteuerung – kein zusätzliches Konto in dieser App nötig.", 13f))
         val access = card(settingsPage)
-        access.addView(label("Verbindungen", 18f))
+        access.addView(label("Einrichtung · Schritt für Schritt", 18f))
+        access.addView(label("1. Musikzugriff: In den Android-Einstellungen AHM3T45 STUDIO den Benachrichtigungszugriff erlauben. Dieser ist für die Mediensteuerung von YouTube Music, Spotify und ähnlichen Playern erforderlich.", 14f))
+        access.addView(label("Falls Android den Zugriff sperrt: App-Info von AHM3T45 STUDIO öffnen → Menü ⋮ → eingeschränkte Einstellungen zulassen, sofern vorhanden. Danach Musikzugriff erneut öffnen.", 13f))
         button("1 · Musikzugriff erlauben", access) { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
         status = label("", 14f).apply { setPadding(0, dp(12), 0, dp(8)); setLineSpacing(dp(3).toFloat(), 1f) }
         access.addView(status)
-        button("2 · Shizuku öffnen / freigeben", access) {
+        access.addView(label("2. Shizuku: Installieren und öffnen. Unter „Über drahtloses Debugging starten“ die angezeigten Schritte befolgen. Dafür Entwickleroptionen und drahtloses Debugging aktivieren, mit dem Kopplungscode koppeln und Shizuku starten. Nach einem Neustart kann ein erneuter Start nötig sein.", 14f))
+        button("Shizuku herunterladen", access) {
+            try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://shizuku.rikka.app/download/"))) }
+            catch (_: android.content.ActivityNotFoundException) { Toast.makeText(this, "Bitte shizuku.rikka.app im Browser öffnen.", Toast.LENGTH_LONG).show() }
+        }
+        access.addView(label("3. Hier „Shizuku öffnen / freigeben“ antippen und AHM3T45 STUDIO erlauben. Wenn bereits abgelehnt: in Shizuku unter autorisierten Apps freigeben. Root ist dafür nicht erforderlich.", 14f))
+        button("Shizuku öffnen / freigeben", access) {
             try {
                 when (ShizukuState.read(this)) {
                     ShizukuState.NOT_ALLOWED -> Shizuku.requestPermission(1)
@@ -186,7 +207,29 @@ class MainActivity : Activity() {
                 }
             } catch (e: RuntimeException) { status.text = "Shizuku: ${e.message}" }
         }
-        root.addView(label("Rückdisplay-Ausgabe noch nicht implementiert. HyperOS 4 China-ROM ist ungetestet.", 12f).apply {
+        val rear = card(settingsPage)
+        rear.addView(label("4 · Rückdisplay-Gerätetest", 18f))
+        rear.addView(label("Zuerst mit der Uhr testen. Rückdisplay einschalten, Telefon entsperrt lassen und prüfen, ob die Ansicht hinten erscheint. HyperOS kann den Start blockieren. Ein akzeptierter Startbefehl allein bestätigt keine sichtbare Ausgabe.", 14f))
+        val mode = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("Uhrtest", "Musik", "Fußball-Ergebnis", "F1-Ergebnis")) }
+        rear.addView(mode)
+        rearStatus = label("Noch kein Rückdisplay-Test ausgeführt.", 13f); rear.addView(rearStatus)
+        rearStart = button("Rückdisplay testen", rear) {
+            if (!rearBusy) {
+                AlertDialog.Builder(this).setTitle("Ansicht auf dem Rückdisplay testen?")
+                    .setMessage("Die App versucht ihre eigene Ansicht über Shizuku auf dem erkannten Rückdisplay zu starten. Keine Xiaomi-Systemeinstellungen werden geändert. Der Test endet nach spätestens 10 Minuten oder über „Test beenden“.")
+                    .setNegativeButton("Abbrechen", null).setPositiveButton("Test starten") { _, _ ->
+                        rearBusy = true; rearStart.isEnabled = false; rearStatus.text = "Start wird versucht …"
+                        val selected = listOf("clock", "music", "football", "f1-results")[mode.selectedItemPosition]
+                        rearWorker.execute {
+                            val result = RearBridge.launch(applicationContext, selected)
+                            runOnUiThread { if (!isDestroyed) { rearBusy = false; rearStatus.text = result; refreshStatus() } }
+                        }
+                    }.show()
+            }
+        }
+        button("Test beenden", rear) { RearBridge.stop(this); rearStatus.text = "Test beendet. Die Testansicht schließt sich, sobald sie wieder aktiv ist." }
+        rear.addView(label("Musik benötigt den Musikzugriff oben. Sport zeigt den zuletzt in der App geladenen Stand samt Abrufzeit. Keine Live-Sportdaten. Der Test ist kein dauerhafter Hintergrunddienst; Sperrbildschirm und ROM-Beschränkungen werden nicht umgangen.", 12f))
+        root.addView(label("Version 0.7 · Ergebnis-Karten & Rückdisplay-Gerätetest. HyperOS 4 China-ROM muss am Gerät geprüft werden.", 12f).apply {
             setPadding(0, dp(20), 0, 0); setTextColor(0xffacb4c9.toInt())
         })
         Shizuku.addRequestPermissionResultListener(permissionListener)
@@ -233,12 +276,16 @@ class MainActivity : Activity() {
                 ShizukuState.NOT_RUNNING -> "nicht gestartet – bitte in Shizuku starten"
                 ShizukuState.NOT_INSTALLED -> "nicht installiert"
             }
-            status.text = "Shizuku: $state\nRückdisplay-Kandidat: ${id ?: "nicht erkannt"}"
+            val granted = getSystemService(NotificationManager::class.java).isNotificationListenerAccessGranted(ComponentName(this, MusicAccessService::class.java))
+            musicAccess.text = if (granted) "Musikzugriff: erlaubt. Player starten und Wiedergabe testen." else "Musikzugriff: noch nicht erlaubt. Bitte unten freigeben."
+            status.text = "Musikzugriff: ${if (granted) "erlaubt" else "fehlt"}\nShizuku: $state\nRückdisplay-Kandidat: ${id ?: "nicht erkannt"}"
+            if (::rearStart.isInitialized) rearStart.isEnabled = !rearBusy && id != null && ShizukuState.read(this) == ShizukuState.READY
         }
     }
     override fun onPause() { manager.removeOnActiveSessionsChangedListener(sessionsListener); controller?.unregisterCallback(mediaCallback); super.onPause() }
     override fun onDestroy() {
         sports.close()
+        rearWorker.shutdownNow()
         Shizuku.removeRequestPermissionResultListener(permissionListener); Shizuku.removeBinderReceivedListener(binderListener); Shizuku.removeBinderDeadListener(deadListener)
         super.onDestroy()
     }
