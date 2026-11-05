@@ -22,9 +22,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build, unit tests and lint
         run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug
+      - name: Name APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AHM3T45-STUDIO-0.6-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: RearStudio-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: AHM3T45-STUDIO-debug-apk
+          path: app/build/outputs/apk/debug/AHM3T45-STUDIO-0.6-debug.apk
           if-no-files-found: error
           retention-days: 14

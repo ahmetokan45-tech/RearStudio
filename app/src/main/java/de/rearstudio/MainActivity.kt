@@ -34,6 +34,7 @@ class MainActivity : Activity() {
     private lateinit var play: Button
     private lateinit var previous: Button
     private lateinit var next: Button
+    private lateinit var sports: SportsPanel
     private val preferences by lazy { getSharedPreferences("design", MODE_PRIVATE) }
     private val permissionListener = Shizuku.OnRequestPermissionResultListener { _, _ -> refreshStatus() }
     private val binderListener = Shizuku.OnBinderReceivedListener { refreshStatus() }
@@ -55,13 +56,13 @@ class MainActivity : Activity() {
     private fun button(value: String, parent: LinearLayout, action: () -> Unit) = Button(this).also {
         it.text = value; it.isAllCaps = false; it.textSize = 14f
         it.minWidth = 0; it.minimumWidth = 0; it.minHeight = dp(48)
-        it.setTextColor(Color.WHITE); it.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(61, 66, 80))
+        it.setTextColor(Color.WHITE); it.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(49, 58, 75))
         parent.addView(it, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         it.setOnClickListener { action() }
     }
     private fun card(parent: LinearLayout) = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(16))
-        background = surface(Color.rgb(30, 33, 42))
+        background = surface(Color.rgb(26, 32, 43))
         parent.addView(this, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,16 +72,41 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(20), dp(20), dp(24))
         }
         val scroll = ScrollView(this).apply {
-            isFillViewport = true; setBackgroundColor(Color.rgb(17, 19, 25)); addView(root)
+            isFillViewport = true; setBackgroundColor(Color.rgb(15, 20, 29)); addView(root)
             setOnApplyWindowInsetsListener { view, insets ->
                 val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
                 view.setPadding(bars.left, bars.top, bars.right, bars.bottom); insets
             }
         }
         setContentView(scroll); scroll.requestApplyInsets()
-        root.addView(label("Rear Studio", 28f))
-        root.addView(label("Music Hub · Vorschau 0.5", 14f).apply { setTextColor(0xffacb4c9.toInt()) })
-        val previewCard = card(root)
+        root.addView(label("AHM3T45", 30f).apply { letterSpacing = .08f })
+        root.addView(label("S T U D I O   /   DEIN PERSÖNLICHER HUB", 11f).apply { setTextColor(0xffefbd60.toInt()) })
+        val navigation = LinearLayout(this)
+        root.addView(navigation, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        val musicPage = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val sportPage = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val settingsPage = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        listOf(musicPage, sportPage, settingsPage).forEach { root.addView(it, LinearLayout.LayoutParams(-1, -2)) }
+        sports = SportsPanel(this, sportPage)
+        val pages = listOf(musicPage, sportPage, settingsPage)
+        val tabs = mutableListOf<Button>()
+        fun select(index: Int) {
+            pages.forEachIndexed { i, page -> page.visibility = if (i == index) View.VISIBLE else View.GONE }
+            tabs.forEachIndexed { i, tab ->
+                tab.isSelected = i == index
+                tab.setTextColor(if (i == index) 0xff141924.toInt() else Color.WHITE)
+                tab.backgroundTintList = android.content.res.ColorStateList.valueOf(if (i == index) 0xffefbd60.toInt() else 0xff202938.toInt())
+            }
+            preferences.edit().putInt("page", index).apply()
+        }
+        listOf("Musik", "Sport", "Einstellungen").forEachIndexed { index, name ->
+            tabs.add(button(name, navigation) { select(index) }.apply {
+                textSize = 12f; setPadding(dp(3), 0, dp(3), 0)
+                layoutParams = LinearLayout.LayoutParams(0, dp(52), 1f).apply { if (index > 0) leftMargin = dp(6) }
+            })
+        }
+        select(preferences.getInt("page", 0).coerceIn(0, 2))
+        val previewCard = card(musicPage)
         previewCard.addView(label("Album Art", 18f))
         previewCard.addView(label("Vorschau auf dem Hauptdisplay", 12f).apply { setPadding(0, dp(4), 0, dp(12)) })
         val preview = FrameLayout(this).apply {
@@ -121,7 +147,7 @@ class MainActivity : Activity() {
             button.setPadding(0, 0, 0, 0)
         }
         previous.contentDescription = "Vorheriger Titel"; play.contentDescription = "Wiedergabe"; next.contentDescription = "Nächster Titel"
-        val design = card(root)
+        val design = card(settingsPage)
         design.addView(label("Kamerabereich", 18f))
         val safeLabel = label("", 13f); design.addView(safeLabel)
         val slider = SeekBar(this).apply { max = 35; progress = preferences.getInt("safe", 35).coerceIn(20, 55) - 20 }
@@ -146,7 +172,7 @@ class MainActivity : Activity() {
             override fun onStartTrackingTouch(bar: SeekBar?) {}
             override fun onStopTrackingTouch(bar: SeekBar?) {}
         }); design.addView(slider); safe(slider.progress + 20)
-        val access = card(root)
+        val access = card(settingsPage)
         access.addView(label("Verbindungen", 18f))
         button("1 · Musikzugriff erlauben", access) { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
         status = label("", 14f).apply { setPadding(0, dp(12), 0, dp(8)); setLineSpacing(dp(3).toFloat(), 1f) }
@@ -212,6 +238,7 @@ class MainActivity : Activity() {
     }
     override fun onPause() { manager.removeOnActiveSessionsChangedListener(sessionsListener); controller?.unregisterCallback(mediaCallback); super.onPause() }
     override fun onDestroy() {
+        sports.close()
         Shizuku.removeRequestPermissionResultListener(permissionListener); Shizuku.removeBinderReceivedListener(binderListener); Shizuku.removeBinderDeadListener(deadListener)
         super.onDestroy()
     }
