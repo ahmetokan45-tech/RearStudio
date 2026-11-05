@@ -1,6 +1,9 @@
-# Rear Studio 0.4 Preview
+# Rear Studio 0.5 Preview
 
 Minimal native Android prototype for the Xiaomi 17 Pro Max / HyperOS 4 China-ROM target. **No hardware compatibility or rear-display control has been verified.** No root required by the prototype.
+
+## Layout update 0.5
+System-bar and cutout insets, density-independent spacing, taller preview, bounded song text, fully drawn camera markers, responsive control widths and readable German Shizuku states. No new rear-display capability is claimed.
 
 ## Included
 - Main-display Album Art preview: full background, dark overlay, two illustrative left camera zones, content and controls to the right.
