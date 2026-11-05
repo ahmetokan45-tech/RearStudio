@@ -104,6 +104,8 @@ class NotificationLayer @JvmOverloads constructor(
         addView(list, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT, Gravity.TOP))
     }
 
+    var onOpen: ((String) -> Unit)? = null
+
     /** Whether the list is down, or on its way. */
     val isShadeOpen get() = list.visibility == VISIBLE
 
@@ -271,7 +273,15 @@ class NotificationLayer @JvmOverloads constructor(
                     dragging && (Swipes.pushCloses(dx, dy, height) || progress < HALF) -> animateShade(0f)
                     dragging -> animateShade(1f)
                     event.y > list.top + list.translationY + list.height -> animateShade(0f)
-                    else -> animateShade(1f)
+                    else -> {
+                        val target=cards.firstOrNull { card ->
+                            if(card.view.parent!==list) false else {
+                                val position=IntArray(2);card.view.getLocationOnScreen(position)
+                                event.rawX>=position[0]&&event.rawX<position[0]+card.view.width&&event.rawY>=position[1]&&event.rawY<position[1]+card.view.height
+                            }
+                        }
+                        if(target!=null){target.view.performClick();closeShade(false)}else animateShade(1f)
+                    }
                 }
             }
             MotionEvent.ACTION_CANCEL -> animateShade(1f)
@@ -488,6 +498,7 @@ class NotificationLayer @JvmOverloads constructor(
         }
 
         fun bind(n: ShownNotification, whenText: String, moreCount: Int) {
+            view.setOnClickListener { onOpen?.invoke(n.key) }
             val appIcon = if (n.packageName == SampleNotification.PACKAGE) AppCompatResources.getDrawable(context, R.drawable.ic_sample_chat)
             else AppIcons.get(context, n.uid, n.packageName)
             fallbackIcon = appIcon == null

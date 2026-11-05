@@ -152,7 +152,11 @@ class RearNotificationListener : NotificationListenerService() {
     }
 
     /** Whether the back screen shows [n] ([NotificationFilter]). */
-    private fun shows(n: RearNotification) = NotificationFilter.shows(n, packageName)
+    private fun shows(n: RearNotification): Boolean {
+        val p=getSharedPreferences("studio",0)
+        val allowed=!p.getBoolean("notification_filter",false)||p.getStringSet("notification_apps",emptySet())!!.contains(n.packageName)
+        return allowed&&NotificationFilter.shows(n,packageName)
+    }
 
     /**
      * [read], or null if [sbn] can't be read. Any app can post a malformed notification (a bad
@@ -272,6 +276,8 @@ class RearNotificationListener : NotificationListenerService() {
         // Every notification in the phone's shade, by key, whether the back screen shows it or not:
         // one that doesn't may later, when Android ranks it again. Main thread.
         private val shade = LinkedHashMap<String, RearNotification>()
+
+        fun openIntent(key:String):android.app.PendingIntent? = try { instance?.activeNotifications?.firstOrNull{it.key==key}?.notification?.contentIntent } catch(_:SecurityException){null}
 
         /** Whether it's connected: access is allowed and the section is on. */
         val isListening get() = instance != null

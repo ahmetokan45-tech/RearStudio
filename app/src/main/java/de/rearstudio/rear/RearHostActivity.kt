@@ -188,7 +188,7 @@ class RearHostActivity : Activity() {
         setContentView(root)
         if (!popover) applyKeepLit()
         if (!popover) addWallpaper(root, display)
-        if (!popover) root.addView(de.rearstudio.StudioRearLayer(this), FrameLayout.LayoutParams(-1, -1))
+        if (!popover) root.addView(de.rearstudio.StudioRearLayer(this).apply { onFrame = { this@RearHostActivity.onShownChanged() } }, FrameLayout.LayoutParams(-1, -1))
         if (!popover) holdFirstDraw()
         addCharging(root, display)
         if (!popover) addNotifications(root, display)
@@ -282,6 +282,7 @@ class RearHostActivity : Activity() {
      * centred.
      */
     private fun addCharging(root: FrameLayout, display: Display) {
+        if (!popover && getSharedPreferences("studio",0).getBoolean("scene_enabled",true)) return
         val camera = BackScreen.cameraInsets(display)
         charging = ChargingLayer(this).apply {
             setPadding(camera.left, camera.top, camera.right, camera.bottom)
@@ -304,6 +305,7 @@ class RearHostActivity : Activity() {
     private fun addNotifications(root: FrameLayout, display: Display) {
         val camera = BackScreen.cameraInsets(display)
         notifications = NotificationLayer(this).apply {
+            onOpen = { key -> de.rearstudio.NotificationOpen.open(this@RearHostActivity,key) }
             setPadding(camera.left, camera.top, camera.right, camera.bottom)
             isLit = { this@RearHostActivity.isLit() }
             onShownChanged = { this@RearHostActivity.onShownChanged() }
@@ -550,6 +552,7 @@ class RearHostActivity : Activity() {
     /** Puts [n] in the banner as the style and privacy allow now: it may have waited while the phone locked. */
     private fun showBanner(n: RearNotification) {
         val shown = formatter()(n) ?: return BackScreen.log("Notification banner dropped: it may not show now")
+        if (getSharedPreferences("studio",0).getBoolean("scene_enabled",true)) { onShownChanged(); return }
         bannerNote = n
         matchNotificationColors()
         notifications?.showBanner(shown, NotificationFormatter.bannerMs(shown))
@@ -624,7 +627,7 @@ class RearHostActivity : Activity() {
 
     private fun applyClock() {
         val clock = clock ?: return
-        clock.visibility = if (WallpaperSettings.showClock(this)) View.VISIBLE else View.GONE
+        clock.visibility = if (!getSharedPreferences("studio",0).getBoolean("scene_enabled",true) && WallpaperSettings.showClock(this)) View.VISIBLE else View.GONE
         val settings = WallpaperSettings.clockSettings(this)
         if (clock.settings != settings) clock.settings = settings
     }

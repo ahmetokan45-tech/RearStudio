@@ -33,8 +33,8 @@ class StudioIntegrationTest {
                 fun texts(view: View): List<String> = (if (view is TextView) listOf(view.text.toString()) else emptyList()) +
                     (if (view is ViewGroup) (0 until view.childCount).flatMap { texts(view.getChildAt(it)) } else emptyList())
                 val values = texts(activity.window.decorView)
-                assertTrue(values.contains("AHM3T45"))
-                assertTrue(values.contains("Hintergründe, Uhr & Ladeanzeigen"))
+                assertTrue(values.any{it.contains("AHM3T45")})
+                assertTrue(values.contains(StudioUi.text(activity,"edit_design")))
             }
         }
     }

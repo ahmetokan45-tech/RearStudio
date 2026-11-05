@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="s_my_display" formatted="false">My display</string>
+  <string name="s_editor" formatted="false">Editor</string>
+  <string name="s_content" formatted="false">Content</string>
+  <string name="s_settings" formatted="false">Settings</string>
+  <string name="s_your_display" formatted="false">Your rear display.</string>
+  <string name="s_personal_glance" formatted="false">Personal. At a glance.</string>
+  <string name="s_your_design" formatted="false">Your design.</string>
+  <string name="s_your_content" formatted="false">Your content.</string>
+  <string name="s_your_studio" formatted="false">Your studio.</string>
+  <string name="s_current_design" formatted="false">Current rear-display design</string>
+  <string name="s_edit_design" formatted="false">Edit design</string>
+  <string name="s_display_on" formatted="false">Turn rear display on</string>
+  <string name="s_display_off" formatted="false">Turn rear display off</string>
+  <string name="s_wallpaper_charging" formatted="false">Wallpaper, charging &amp; advanced</string>
+  <string name="s_normal" formatted="false">Normal</string>
+  <string name="s_charging" formatted="false">Charging</string>
+  <string name="s_notification" formatted="false">Notification</string>
+  <string name="s_clock" formatted="false">Clock</string>
+  <string name="s_date" formatted="false">Date</string>
+  <string name="s_battery" formatted="false">Battery</string>
+  <string name="s_music" formatted="false">Music</string>
+  <string name="s_football" formatted="false">Football</string>
+  <string name="s_f1" formatted="false">Formula 1</string>
+  <string name="s_sport" formatted="false">Sport</string>
+  <string name="s_notifications" formatted="false">Notifications</string>
+  <string name="s_cancel" formatted="false">Cancel</string>
+  <string name="s_undo" formatted="false">Undo</string>
+  <string name="s_save" formatted="false">Save</string>
+  <string name="s_done" formatted="false">Done</string>
+  <string name="s_close" formatted="false">Close</string>
+  <string name="s_allow" formatted="false">Allow</string>
+  <string name="s_allowed" formatted="false">Allowed</string>
+  <string name="s_missing" formatted="false">Missing</string>
+  <string name="s_profile_off" formatted="false">Profile disabled</string>
+  <string name="s_profile_enabled" formatted="false">Enable profile</string>
+  <string name="s_widget_enabled" formatted="false">Show widget</string>
+  <string name="s_add_widget" formatted="false">＋ Add widget</string>
+  <string name="s_remove_widget" formatted="false">Remove widget</string>
+  <string name="s_widget_limit" formatted="false">Maximum 18 widgets per profile.</string>
+  <string name="s_drag_hint" formatted="false">Drag to move · corner to resize · × to remove</string>
+  <string name="s_background" formatted="false">Background</string>
+  <string name="s_solid" formatted="false">Solid colour</string>
+  <string name="s_gradient" formatted="false">Gradient</string>
+  <string name="s_photo" formatted="false">Photo / GIF</string>
+  <string name="s_gallery" formatted="false">Existing gallery</string>
+  <string name="s_choose_photo" formatted="false">Choose photo or GIF</string>
+  <string name="s_image_failed" formatted="false">Image could not be imported (maximum 25 MB).</string>
+  <string name="s_dimming" formatted="false">Dim background</string>
+  <string name="s_color" formatted="false">Colour</string>
+  <string name="s_second_color" formatted="false">Second colour</string>
+  <string name="s_opacity" formatted="false">Opacity</string>
+  <string name="s_width" formatted="false">Width (%)</string>
+  <string name="s_height" formatted="false">Height (%)</string>
+  <string name="s_position_x" formatted="false">Horizontal position (%)</string>
+  <string name="s_position_y" formatted="false">Vertical position (%)</string>
+  <string name="s_style" formatted="false">Style</string>
+  <string name="s_digital" formatted="false">Digital</string>
+  <string name="s_stacked" formatted="false">Stacked</string>
+  <string name="s_analog" formatted="false">Analogue</string>
+  <string name="s_elegant" formatted="false">Elegant</string>
+  <string name="s_minimal" formatted="false">Minimal</string>
+  <string name="s_live_rear" formatted="false">Live preview on rear display</string>
+  <string name="s_discard_title" formatted="false">Discard unsaved changes?</string>
+  <string name="s_discard" formatted="false">Discard</string>
+  <string name="s_duration" formatted="false">Display duration (seconds)</string>
+  <string name="s_zero_continuous" formatted="false">0 = continuous while the event remains active</string>
+  <string name="s_reuse_normal" formatted="false">Keep normal design</string>
+  <string name="s_charging_display" formatted="false">Charging display</string>
+  <string name="s_charging_enabled" formatted="false">Enable charging display</string>
+  <string name="s_edge" formatted="false">Display edge</string>
+  <string name="s_bar" formatted="false">Bar</string>
+  <string name="s_ring" formatted="false">Battery ring</string>
+  <string name="s_palette" formatted="false">Colours</string>
+  <string name="s_rainbow" formatted="false">Multicolour</string>
+  <string name="s_thickness" formatted="false">Thickness</string>
+  <string name="s_glow" formatted="false">Soft glow</string>
+  <string name="s_percentage" formatted="false">Show battery percentage</string>
+  <string name="s_animation" formatted="false">Animation</string>
+  <string name="s_preview_level" formatted="false">Preview battery level (%)</string>
+  <string name="s_test_animation" formatted="false">Preview animation</string>
+  <string name="s_popup" formatted="false">Notification pop-up</string>
+  <string name="s_start_player" formatted="false">Access allowed. Start playback in YouTube Music or Spotify.</string>
+  <string name="s_music_access" formatted="false">Music access</string>
+  <string name="s_allow_shizuku" formatted="false">Allow music access via Shizuku</string>
+  <string name="s_access_explanation" formatted="false">Android notification access is used to read media sessions and control playback. No provider password is required. Allow this app’s music listener through Shizuku?</string>
+  <string name="s_access_failed" formatted="false">Access could not be enabled. Use Android Settings.</string>
+  <string name="s_access_missing" formatted="false">Music access has not been allowed yet.</string>
+  <string name="s_music_ready" formatted="false">Player connected. Playback controls are ready.</string>
+  <string name="s_check_music" formatted="false">Check player connection</string>
+  <string name="s_player" formatted="false">Preferred player</string>
+  <string name="s_automatic" formatted="false">Automatic</string>
+  <string name="s_music_help" formatted="false">Start playback in your player, then return here. Either of this app’s authorized notification listeners can provide media access. If Android blocks access, allow restricted settings in App info, then retry.</string>
+  <string name="s_load_results" formatted="false">Load a result in Content first</string>
+  <string name="s_published" formatted="false">Published result · not live</string>
+  <string name="s_no_notifications" formatted="false">No visible notification</string>
+  <string name="s_notification_help" formatted="false">Choose which apps may appear. Tap a notification to open its actual message. Rear-display opening depends on the app and ROM; phone opening is offered as fallback. Unlocking is always required.</string>
+  <string name="s_notifications_enabled" formatted="false">Show rear notifications</string>
+  <string name="s_notification_apps" formatted="false">Choose notification apps</string>
+  <string name="s_notification_access" formatted="false">Notification access</string>
+  <string name="s_open_rear" formatted="false">Prefer opening on rear display</string>
+  <string name="s_notification_design" formatted="false">Edit notification design</string>
+  <string name="s_notification_options" formatted="false">Advanced notification options</string>
+  <string name="s_unlock_first" formatted="false">Unlock your phone first.</string>
+  <string name="s_notification_gone" formatted="false">This notification cannot be opened or has expired.</string>
+  <string name="s_notification_fallback" formatted="false">If the message did not open here, open it on the phone.</string>
+  <string name="s_open_phone" formatted="false">Open on phone</string>
+  <string name="s_open_failed" formatted="false">This app did not allow opening the notification.</string>
+  <string name="s_language" formatted="false">Language</string>
+  <string name="s_connections" formatted="false">Connections &amp; access</string>
+  <string name="s_connect_shizuku" formatted="false">Connect / allow Shizuku</string>
+  <string name="s_connected" formatted="false">Connected and authorized</string>
+  <string name="s_connection_missing" formatted="false">No authorized connection</string>
+  <string name="s_need_shizuku" formatted="false">Start Shizuku and authorize this app.</string>
+  <string name="s_setup_help" formatted="false">Start Shizuku using its wireless-debugging guide, then allow this app. If Shizuku already runs, no new Android pairing code is needed. Music access is a separate permission.</string>
+  <string name="s_shizuku_download" formatted="false">Get Shizuku</string>
+  <string name="s_advanced" formatted="false">Wallpaper, charging, camera &amp; advanced</string>
+  <string name="s_advanced_help" formatted="false">The Mi Back Screen engine remains available, including schedules, camera and Quick Switch. Only enable the features you want.</string>
+  <string name="s_source_note" formatted="false">Based on Mi Back Screen (MIT, Andrew Worgan). Sports load from TheSportsDB/Jolpica on request. No notification text is uploaded.</string>
+  <string name="s_results" formatted="false">Results</string>
+  <string name="s_refresh" formatted="false">Refresh</string>
+  <string name="s_details" formatted="false">Details &amp; source</string>
+  <string name="s_select_club" formatted="false">Choose club</string>
+  <string name="s_search" formatted="false">Search</string>
+  <string name="s_search_hint" formatted="false">Club name</string>
+  <string name="s_search_info" formatted="false">Search the provider and confirm the matched club.</string>
+  <string name="s_searching" formatted="false">Searching…</string>
+  <string name="s_no_team" formatted="false">No matching football club found.</string>
+  <string name="s_select" formatted="false">Select</string>
+  <string name="s_invalid_team" formatted="false">Enter 2 to 60 characters.</string>
+  <string name="s_loading" formatted="false">Loading…</string>
+  <string name="s_network_error" formatted="false">No data loaded. Check the connection and try again.</string>
+  <string name="s_wait_refresh" formatted="false">Please wait 30 seconds between requests.</string>
+  <string name="s_result_limit" formatted="false">Published data, not live. The free football source can return older home games and omit away games.</string>
+  <string name="s_next_race" formatted="false">Next Grand Prix</string>
+  <string name="s_no_schedule" formatted="false">No next race published.</string>
+  <string name="s_favorite_driver" formatted="false">Favorite driver</string>
+  <string name="s_accent" formatted="false">Accent colour</string>
+  <string name="s_retrieved" formatted="false">Retrieved</string>
+</resources>

@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="s_my_display" formatted="false">Ekranım</string>
+  <string name="s_editor" formatted="false">Düzenleyici</string>
+  <string name="s_content" formatted="false">İçerikler</string>
+  <string name="s_settings" formatted="false">Ayarlar</string>
+  <string name="s_your_display" formatted="false">Arka ekranın.</string>
+  <string name="s_personal_glance" formatted="false">Kişisel. Tek bakışta.</string>
+  <string name="s_your_design" formatted="false">Senin tasarımın.</string>
+  <string name="s_your_content" formatted="false">İçeriklerin.</string>
+  <string name="s_your_studio" formatted="false">Senin stüdyon.</string>
+  <string name="s_current_design" formatted="false">Geçerli arka ekran tasarımı</string>
+  <string name="s_edit_design" formatted="false">Tasarımı düzenle</string>
+  <string name="s_display_on" formatted="false">Arka ekranı aç</string>
+  <string name="s_display_off" formatted="false">Arka ekranı kapat</string>
+  <string name="s_wallpaper_charging" formatted="false">Arka plan, şarj ve gelişmiş</string>
+  <string name="s_normal" formatted="false">Normal</string>
+  <string name="s_charging" formatted="false">Şarj</string>
+  <string name="s_notification" formatted="false">Bildirim</string>
+  <string name="s_clock" formatted="false">Saat</string>
+  <string name="s_date" formatted="false">Tarih</string>
+  <string name="s_battery" formatted="false">Pil</string>
+  <string name="s_music" formatted="false">Müzik</string>
+  <string name="s_football" formatted="false">Futbol</string>
+  <string name="s_f1" formatted="false">Formula 1</string>
+  <string name="s_sport" formatted="false">Spor</string>
+  <string name="s_notifications" formatted="false">Bildirimler</string>
+  <string name="s_cancel" formatted="false">Vazgeç</string>
+  <string name="s_undo" formatted="false">Geri al</string>
+  <string name="s_save" formatted="false">Kaydet</string>
+  <string name="s_done" formatted="false">Tamam</string>
+  <string name="s_close" formatted="false">Kapat</string>
+  <string name="s_allow" formatted="false">İzin ver</string>
+  <string name="s_allowed" formatted="false">İzin verildi</string>
+  <string name="s_missing" formatted="false">Eksik</string>
+  <string name="s_profile_off" formatted="false">Profil kapalı</string>
+  <string name="s_profile_enabled" formatted="false">Profili etkinleştir</string>
+  <string name="s_widget_enabled" formatted="false">Widget göster</string>
+  <string name="s_add_widget" formatted="false">＋ Widget ekle</string>
+  <string name="s_remove_widget" formatted="false">Widget kaldır</string>
+  <string name="s_widget_limit" formatted="false">Profil başına en fazla 18 widget.</string>
+  <string name="s_drag_hint" formatted="false">Taşımak için sürükle · köşeden boyutlandır · × ile kaldır</string>
+  <string name="s_background" formatted="false">Arka plan</string>
+  <string name="s_solid" formatted="false">Tek renk</string>
+  <string name="s_gradient" formatted="false">Renk geçişi</string>
+  <string name="s_photo" formatted="false">Fotoğraf / GIF</string>
+  <string name="s_gallery" formatted="false">Mevcut galeri</string>
+  <string name="s_choose_photo" formatted="false">Fotoğraf veya GIF seç</string>
+  <string name="s_image_failed" formatted="false">Görsel alınamadı (en fazla 25 MB).</string>
+  <string name="s_dimming" formatted="false">Arka planı karart</string>
+  <string name="s_color" formatted="false">Renk</string>
+  <string name="s_second_color" formatted="false">İkinci renk</string>
+  <string name="s_opacity" formatted="false">Opaklık</string>
+  <string name="s_width" formatted="false">Genişlik (%)</string>
+  <string name="s_height" formatted="false">Yükseklik (%)</string>
+  <string name="s_position_x" formatted="false">Yatay konum (%)</string>
+  <string name="s_position_y" formatted="false">Dikey konum (%)</string>
+  <string name="s_style" formatted="false">Stil</string>
+  <string name="s_digital" formatted="false">Dijital</string>
+  <string name="s_stacked" formatted="false">Üst üste</string>
+  <string name="s_analog" formatted="false">Analog</string>
+  <string name="s_elegant" formatted="false">Zarif</string>
+  <string name="s_minimal" formatted="false">Minimal</string>
+  <string name="s_live_rear" formatted="false">Arka ekranda canlı önizleme</string>
+  <string name="s_discard_title" formatted="false">Kaydedilmemiş değişiklikler silinsin mi?</string>
+  <string name="s_discard" formatted="false">Vazgeç</string>
+  <string name="s_duration" formatted="false">Gösterim süresi (saniye)</string>
+  <string name="s_zero_continuous" formatted="false">0 = olay etkinken sürekli</string>
+  <string name="s_reuse_normal" formatted="false">Normal tasarımı koru</string>
+  <string name="s_charging_display" formatted="false">Şarj görünümü</string>
+  <string name="s_charging_enabled" formatted="false">Şarj göstergesini aç</string>
+  <string name="s_edge" formatted="false">Ekran kenarı</string>
+  <string name="s_bar" formatted="false">Çubuk</string>
+  <string name="s_ring" formatted="false">Pil halkası</string>
+  <string name="s_palette" formatted="false">Renkler</string>
+  <string name="s_rainbow" formatted="false">Çok renkli</string>
+  <string name="s_thickness" formatted="false">Kalınlık</string>
+  <string name="s_glow" formatted="false">Yumuşak parlama</string>
+  <string name="s_percentage" formatted="false">Pil yüzdesini göster</string>
+  <string name="s_animation" formatted="false">Animasyon</string>
+  <string name="s_preview_level" formatted="false">Önizleme pil seviyesi (%)</string>
+  <string name="s_test_animation" formatted="false">Animasyonu önizle</string>
+  <string name="s_popup" formatted="false">Bildirim açılır penceresi</string>
+  <string name="s_start_player" formatted="false">İzin verildi. YouTube Music veya Spotify’da müzik başlat.</string>
+  <string name="s_music_access" formatted="false">Müzik erişimi</string>
+  <string name="s_allow_shizuku" formatted="false">Shizuku ile müzik erişimine izin ver</string>
+  <string name="s_access_explanation" formatted="false">Android bildirim erişimi, medya bilgileri ve oynatma denetimi için kullanılır. Hizmet şifresi gerekmez. Müzik hizmetimize Shizuku üzerinden izin verilsin mi?</string>
+  <string name="s_access_failed" formatted="false">Erişim açılamadı. Android ayarlarını kullan.</string>
+  <string name="s_access_missing" formatted="false">Müzik erişimine henüz izin verilmedi.</string>
+  <string name="s_music_ready" formatted="false">Oynatıcı bağlı. Oynatma denetimleri hazır.</string>
+  <string name="s_check_music" formatted="false">Oynatıcı bağlantısını kontrol et</string>
+  <string name="s_player" formatted="false">Tercih edilen oynatıcı</string>
+  <string name="s_automatic" formatted="false">Otomatik</string>
+  <string name="s_music_help" formatted="false">Oynatıcıda müzik başlat ve buraya dön. Uygulamamızın izin verilen iki bildirim hizmetinden biri medya erişimi sağlayabilir. Android engellerse uygulama bilgilerinde kısıtlı ayarlara izin verip tekrar dene.</string>
+  <string name="s_load_results" formatted="false">Önce İçerikler bölümünden sonuç yükle</string>
+  <string name="s_published" formatted="false">Yayımlanan sonuç · canlı değil</string>
+  <string name="s_no_notifications" formatted="false">Görünür bildirim yok</string>
+  <string name="s_notification_help" formatted="false">Görünebilecek uygulamaları seç. Bildirime dokunmak ilgili mesajı açar. Arka ekranda açılması uygulama ve ROM’a bağlıdır; alternatif olarak ana ekran sunulur. Kilidin açılması gerekir.</string>
+  <string name="s_notifications_enabled" formatted="false">Arka ekranda bildirim göster</string>
+  <string name="s_notification_apps" formatted="false">Bildirim uygulamalarını seç</string>
+  <string name="s_notification_access" formatted="false">Bildirim erişimi</string>
+  <string name="s_open_rear" formatted="false">Öncelikle arka ekranda aç</string>
+  <string name="s_notification_design" formatted="false">Bildirim tasarımını düzenle</string>
+  <string name="s_notification_options" formatted="false">Gelişmiş bildirim seçenekleri</string>
+  <string name="s_unlock_first" formatted="false">Önce telefonunun kilidini aç.</string>
+  <string name="s_notification_gone" formatted="false">Bu bildirim açılamıyor veya süresi dolmuş.</string>
+  <string name="s_notification_fallback" formatted="false">Mesaj burada açılmadıysa telefonda açabilirsin.</string>
+  <string name="s_open_phone" formatted="false">Telefonda aç</string>
+  <string name="s_open_failed" formatted="false">Uygulama bildirimin açılmasına izin vermedi.</string>
+  <string name="s_language" formatted="false">Dil</string>
+  <string name="s_connections" formatted="false">Bağlantılar ve izinler</string>
+  <string name="s_connect_shizuku" formatted="false">Shizuku’ya bağlan / izin ver</string>
+  <string name="s_connected" formatted="false">Bağlı ve izinli</string>
+  <string name="s_connection_missing" formatted="false">İzinli bağlantı yok</string>
+  <string name="s_need_shizuku" formatted="false">Shizuku’yu başlat ve bu uygulamaya izin ver.</string>
+  <string name="s_setup_help" formatted="false">Shizuku’yu kablosuz hata ayıklama kılavuzuyla başlat ve uygulamamıza izin ver. Shizuku çalışıyorsa yeni Android eşleştirme kodu gerekmez. Müzik erişimi ayrı bir izindir.</string>
+  <string name="s_shizuku_download" formatted="false">Shizuku’yu indir</string>
+  <string name="s_advanced" formatted="false">Arka plan, şarj, kamera ve gelişmiş</string>
+  <string name="s_advanced_help" formatted="false">Mi Back Screen altyapısı; zamanlama, kamera ve Quick Switch özellikleriyle kullanılabilir. İstediğin özellikleri aç.</string>
+  <string name="s_source_note" formatted="false">Mi Back Screen tabanlıdır (MIT, Andrew Worgan). Spor verileri istek üzerine TheSportsDB/Jolpica’dan alınır. Bildirim metinleri yüklenmez.</string>
+  <string name="s_results" formatted="false">Sonuçlar</string>
+  <string name="s_refresh" formatted="false">Yenile</string>
+  <string name="s_details" formatted="false">Ayrıntılar ve kaynak</string>
+  <string name="s_select_club" formatted="false">Takım seç</string>
+  <string name="s_search" formatted="false">Ara</string>
+  <string name="s_search_hint" formatted="false">Takım adı</string>
+  <string name="s_search_info" formatted="false">Veri kaynağında ara ve bulunan takımı onayla.</string>
+  <string name="s_searching" formatted="false">Aranıyor…</string>
+  <string name="s_no_team" formatted="false">Eşleşen futbol takımı bulunamadı.</string>
+  <string name="s_select" formatted="false">Seç</string>
+  <string name="s_invalid_team" formatted="false">2–60 karakter gir.</string>
+  <string name="s_loading" formatted="false">Yükleniyor…</string>
+  <string name="s_network_error" formatted="false">Veri alınamadı. Bağlantıyı kontrol edip tekrar dene.</string>
+  <string name="s_wait_refresh" formatted="false">İstekler arasında 30 saniye bekle.</string>
+  <string name="s_result_limit" formatted="false">Yayımlanan veriler, canlı skor değil. Ücretsiz futbol kaynağı eski iç saha maçlarını gösterebilir ve deplasman maçlarını atlayabilir.</string>
+  <string name="s_next_race" formatted="false">Sonraki Grand Prix</string>
+  <string name="s_no_schedule" formatted="false">Sonraki yarış henüz yayımlanmadı.</string>
+  <string name="s_favorite_driver" formatted="false">Favori sürücü</string>
+  <string name="s_accent" formatted="false">Vurgu rengi</string>
+  <string name="s_retrieved" formatted="false">Alınma zamanı</string>
+</resources>

@@ -1,286 +1,84 @@
 package de.rearstudio
 
-import android.app.Activity
-import android.app.NotificationManager
-import android.app.AlertDialog
-import android.net.Uri
+import android.app.LocaleManager
 import android.content.ComponentName
 import android.content.Intent
-import android.graphics.Color
-import android.hardware.display.DisplayManager
-import android.media.MediaMetadata
-import android.media.session.MediaController
-import android.media.session.MediaSessionManager
-import android.media.session.PlaybackState
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.LocaleList
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
-import android.view.WindowInsets
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.drawable.GradientDrawable
-import android.text.TextUtils
 import android.widget.*
-import rikka.shizuku.Shizuku
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import de.rearstudio.core.KeeperService
+import de.rearstudio.core.RearCommands
+import de.rearstudio.notifications.NotificationSettings
+import de.rearstudio.notifications.RearNotificationListener
+import java.util.concurrent.Executors
 
-class MainActivity : Activity() {
-    private val handler = Handler(Looper.getMainLooper())
-    private var controller: MediaController? = null
-    private lateinit var title: TextView
-    private lateinit var artist: TextView
-    private lateinit var status: TextView
-    private lateinit var cover: ImageView
-    private lateinit var content: LinearLayout
-    private lateinit var play: Button
-    private lateinit var previous: Button
-    private lateinit var next: Button
-    private lateinit var sports: SportsPanel
-    private lateinit var musicAccess: TextView
-
-    private val preferences by lazy { getSharedPreferences("design", MODE_PRIVATE) }
-    private val permissionListener = Shizuku.OnRequestPermissionResultListener { _, _ -> refreshStatus() }
-    private val binderListener = Shizuku.OnBinderReceivedListener { refreshStatus() }
-    private val deadListener = Shizuku.OnBinderDeadListener { refreshStatus() }
-    private val mediaCallback = object : MediaController.Callback() {
-        override fun onMetadataChanged(metadata: MediaMetadata?) = renderMusic()
-        override fun onPlaybackStateChanged(state: PlaybackState?) = renderMusic()
-        override fun onSessionDestroyed() = connectMusic()
+class MainActivity:AppCompatActivity(){
+    private val backdrops=mutableListOf<de.rearstudio.wallpaper.WallpaperLayer>();private var page=0;private var contentTab=0;private lateinit var body:LinearLayout;private lateinit var nav:LinearLayout;private var canvas:StudioCanvas?=null;private var musicCanvas:StudioCanvas?=null;private var sport:SportsPanel?=null;private var status:TextView?=null;private var musicStatus:TextView?=null
+    private val handler=Handler(Looper.getMainLooper());private val shell=Executors.newSingleThreadExecutor()
+    private val prefs by lazy{getSharedPreferences("studio",0)}
+    private val listener=rikka.shizuku.Shizuku.OnRequestPermissionResultListener{_,_->refreshStatus()}
+    private val binder=rikka.shizuku.Shizuku.OnBinderReceivedListener{refreshStatus()}
+    private val pulse=object:Runnable{override fun run(){refreshStatus();handler.postDelayed(this,2000)}}
+    private fun t(k:String)=StudioUi.text(this,k)
+    override fun onCreate(saved:Bundle?){super.onCreate(saved);page=saved?.getInt("page")?:prefs.getInt("page",0);contentTab=saved?.getInt("contentTab")?:0
+        window.setDecorFitsSystemWindows(false);window.decorView.systemUiVisibility=0
+        val root=StudioUi.column(this).apply{setBackgroundColor(StudioUi.BG)};root.setOnApplyWindowInsetsListener{v,insets->val bars=insets.getInsets(android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);insets};setContentView(root)
+        val scroll=ScrollView(this).apply{isFillViewport=true};root.addView(scroll,LinearLayout.LayoutParams(-1,0,1f));body=StudioUi.column(this).apply{setPadding(StudioUi.dp(this@MainActivity,22),StudioUi.dp(this@MainActivity,18),StudioUi.dp(this@MainActivity,22),StudioUi.dp(this@MainActivity,24))};scroll.addView(body)
+        nav=LinearLayout(this);nav.setBackgroundColor(0xff15161c.toInt());root.addView(nav)
+        listOf("my_display","editor","content","settings").forEachIndexed{i,key->val box=StudioUi.column(this);nav.addView(box,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,box,t(key)){if(i==1)startActivity(Intent(this,EditorActivity::class.java))else{page=i;prefs.edit().putInt("page",i).apply();render()}}.apply{textSize=11f;minHeight=StudioUi.dp(this@MainActivity,58);text=listOf("◫","⊞","▤","⚙")[i]+"\n"+t(key);setBackgroundColor(android.graphics.Color.TRANSPARENT)}}
+        rikka.shizuku.Shizuku.addRequestPermissionResultListener(listener);rikka.shizuku.Shizuku.addBinderReceivedListenerSticky(binder);render()
     }
-    private val sessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { connectMusic() }
-    private val manager by lazy { getSystemService(MediaSessionManager::class.java) }
-    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
-    private fun label(value: String, size: Float = 16f) = TextView(this).apply {
-        text = value; textSize = size; setTextColor(Color.WHITE)
+    private fun render(){backdrops.forEach{it.release()};backdrops.clear();sport?.close();sport=null;canvas?.dispose();musicCanvas?.dispose();canvas=null;musicCanvas=null;status=null;musicStatus=null;body.removeAllViews()
+        body.addView(StudioUi.label(this,"A  /  AHM3T45 STUDIO",11f).apply{setTextColor(StudioScene.load(this@MainActivity).accent);letterSpacing=.13f})
+        for(i in 0 until nav.childCount){val b=(nav.getChildAt(i) as LinearLayout).getChildAt(0) as Button;b.setTextColor(if(i==page)StudioScene.load(this).accent else StudioUi.SUB)}
+        when(page){0->home();2->content();else->settings()}
     }
-    private fun surface(color: Int, radius: Int = 20) = GradientDrawable().apply {
-        setColor(color); cornerRadius = dp(radius).toFloat()
+    private fun home(){StudioUi.title(this,body,"your_display");body.addView(StudioUi.label(this,t("personal_glance"),13f,true));val preview=RearPreview(this);body.addView(preview,LinearLayout.LayoutParams(-1,-2).apply{topMargin=StudioUi.dp(this@MainActivity,24)});val target=de.rearstudio.core.BackScreen.findRearDisplay(this)?:runCatching{display}.getOrNull();if(target!=null){val layer=de.rearstudio.wallpaper.WallpaperLayer(this,target);backdrops.add(layer);preview.addView(layer,FrameLayout.LayoutParams(-1,-1));layer.resume()};canvas=StudioCanvas(this).apply{scene=StudioScene.load(this@MainActivity);forcedProfile="normal";cameraGuides=true;contentDescription=t("current_design")};preview.addView(canvas,FrameLayout.LayoutParams(-1,-1));StudioUi.button(this,body,t("edit_design"),true){startActivity(Intent(this,EditorActivity::class.java))}
+        val on=de.rearstudio.wallpaper.WallpaperSettings.isEnabled(this)
+        StudioUi.button(this,body,t(if(on)"display_off" else "display_on")){if(RearCommands.isReady()){KeeperService.setWallpaper(this,!on);render()}else connect()}
+        val links=StudioUi.card(this,body);StudioUi.button(this,links,t("wallpaper_charging")){startActivity(Intent(this,DisplayActivity::class.java))};StudioUi.button(this,links,t("content")){page=2;render()}
+        status=StudioUi.label(this,"",12f,true);body.addView(status);refreshStatus()
     }
-    private fun button(value: String, parent: LinearLayout, action: () -> Unit) = Button(this).also {
-        it.text = value; it.isAllCaps = false; it.textSize = 14f
-        it.minWidth = 0; it.minimumWidth = 0; it.minHeight = dp(48)
-        it.setTextColor(Color.WHITE); it.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(49, 58, 75))
-        parent.addView(it, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        it.setOnClickListener { action() }
+    private fun content(){StudioUi.title(this,body,"your_content");val choices=LinearLayout(this);body.addView(choices);listOf("music","sport","notifications").forEachIndexed{i,key->val box=StudioUi.column(this);choices.addView(box,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,box,t(key),contentTab==i){contentTab=i;render()}.textSize=12f}
+        when(contentTab){0->music();1->{sport=SportsPanel(this,body)};else->notifications()}
     }
-    private fun card(parent: LinearLayout) = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(16))
-        background = surface(Color.rgb(26, 32, 43))
-        parent.addView(this, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+    private fun music(){val preview=RearPreview(this);body.addView(preview,LinearLayout.LayoutParams(-1,-2).apply{topMargin=StudioUi.dp(this@MainActivity,20)});val scene=StudioScene.defaults();scene.profile("normal").widgets.clear();scene.profile("normal").widgets.add(StudioWidget(kind="music",x=.05f,y=.08f,w=.9f,h=.84f));musicCanvas=StudioCanvas(this).apply{this.scene=scene;forcedProfile="normal"};preview.addView(musicCanvas,FrameLayout.LayoutParams(-1,-1))
+        val box=StudioUi.card(this,body);musicStatus=StudioUi.label(this,"",14f);box.addView(musicStatus);StudioUi.button(this,box,t("music_access")){MediaHub.settings(this)}
+        StudioUi.button(this,box,t("allow_shizuku")){MaterialAlertDialogBuilder(this).setTitle(t("music_access")).setMessage(t("access_explanation")).setNegativeButton(t("cancel"),null).setPositiveButton(t("allow")){_,_->if(!RearCommands.isReady()){connect();return@setPositiveButton};shell.execute{val result=RearCommands.allowNotificationListener(ComponentName(this,MusicAccessService::class.java).flattenToString());runOnUiThread{if(!isDestroyed){MediaHub.rebind(this);refreshStatus();if(result!="ok")Toast.makeText(this,t("access_failed"),Toast.LENGTH_LONG).show()}}}}.show()}
+        StudioUi.button(this,box,t("check_music")){MediaHub.rebind(this);musicCanvas?.refresh();refreshStatus()}
+        val players=listOf("auto","com.google.android.apps.youtube.music","com.spotify.music");val names=arrayOf(t("automatic"),"YouTube Music","Spotify");StudioUi.button(this,box,t("player")){MaterialAlertDialogBuilder(this).setTitle(t("player")).setSingleChoiceItems(names,players.indexOf(prefs.getString("player","auto"))){dialog,i->prefs.edit().putString("player",players[i]).apply();dialog.dismiss();musicCanvas?.refresh()}.show()}
+        box.addView(StudioUi.label(this,t("music_help"),12f,true));refreshStatus()
     }
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        window.setDecorFitsSystemWindows(false)
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(20), dp(20), dp(24))
-        }
-        val scroll = ScrollView(this).apply {
-            isFillViewport = true; setBackgroundColor(Color.rgb(15, 20, 29)); addView(root)
-            setOnApplyWindowInsetsListener { view, insets ->
-                val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
-                view.setPadding(bars.left, bars.top, bars.right, bars.bottom); insets
-            }
-        }
-        setContentView(scroll); scroll.requestApplyInsets()
-        root.addView(label("AHM3T45", 30f).apply { letterSpacing = .08f })
-        root.addView(label("S T U D I O   /   DEIN PERSÖNLICHER HUB", 11f).apply { setTextColor(0xffefbd60.toInt()) })
-        val navigation = LinearLayout(this)
-        root.addView(navigation, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
-        val musicPage = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val sportPage = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val settingsPage = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        listOf(musicPage, sportPage, settingsPage).forEach { root.addView(it, LinearLayout.LayoutParams(-1, -2)) }
-        sports = SportsPanel(this, sportPage)
-        val pages = listOf(musicPage, sportPage, settingsPage)
-        val tabs = mutableListOf<Button>()
-        fun select(index: Int) {
-            pages.forEachIndexed { i, page -> page.visibility = if (i == index) View.VISIBLE else View.GONE }
-            tabs.forEachIndexed { i, tab ->
-                tab.isSelected = i == index
-                tab.setTextColor(if (i == index) 0xff141924.toInt() else Color.WHITE)
-                tab.backgroundTintList = android.content.res.ColorStateList.valueOf(if (i == index) 0xffefbd60.toInt() else 0xff202938.toInt())
-            }
-            preferences.edit().putInt("page", index).apply()
-        }
-        listOf("Musik", "Sport", "Einstellungen").forEachIndexed { index, name ->
-            tabs.add(button(name, navigation) { select(index) }.apply {
-                textSize = 12f; setPadding(dp(3), 0, dp(3), 0)
-                layoutParams = LinearLayout.LayoutParams(0, dp(52), 1f).apply { if (index > 0) leftMargin = dp(6) }
-            })
-        }
-        select(preferences.getInt("page", 0).coerceIn(0, 2))
-        val previewCard = card(musicPage)
-        previewCard.addView(label("Album Art", 18f))
-        previewCard.addView(label("Vorschau auf dem Hauptdisplay", 12f).apply { setPadding(0, dp(4), 0, dp(12)) })
-        val preview = FrameLayout(this).apply {
-            background = surface(Color.rgb(62, 48, 74), 16); clipToOutline = true
-        }
-        previewCard.addView(preview, LinearLayout.LayoutParams(-1, dp(264)))
-        cover = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
-        preview.addView(cover, FrameLayout.LayoutParams(-1, -1))
-        preview.addView(View(this).apply { setBackgroundColor(0x99000000.toInt()) }, FrameLayout.LayoutParams(-1, -1))
-        val lenses = object : View(this) {
-            private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xff8d839c.toInt(); style = Paint.Style.STROKE; strokeWidth = dp(2).toFloat()
-            }
-            override fun onDraw(canvas: Canvas) {
-                val radius = minOf(width * .32f, height * .15f)
-                canvas.drawCircle(width / 2f, height * .30f, radius, paint)
-                canvas.drawCircle(width / 2f, height * .70f, radius, paint)
-            }
-        }.apply { contentDescription = "Zwei vorläufige Kamerazonen links" }
-        preview.addView(lenses, FrameLayout.LayoutParams(0, -1))
-        content = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(8), dp(12), dp(12), dp(12))
-        }
-        preview.addView(content, FrameLayout.LayoutParams(0, -1))
-        title = label("Keine aktive Musik", 18f).apply { maxLines = 2; ellipsize = TextUtils.TruncateAt.END }
-        artist = label("Musikzugriff erlauben, dann einen Player starten.", 13f).apply {
-            maxLines = 3; ellipsize = TextUtils.TruncateAt.END; setPadding(0, dp(8), 0, dp(12))
-            setTextColor(0xffd3cadf.toInt())
-        }
-        content.addView(title); content.addView(artist)
-        val controls = LinearLayout(this); content.addView(controls)
-        previous = button("⏮", controls) { control { skipToPrevious() } }
-        play = button("▶", controls) { control { if (controller?.playbackState?.state == PlaybackState.STATE_PLAYING) pause() else play() } }
-        next = button("⏭", controls) { control { skipToNext() } }
-        listOf(previous, play, next).forEachIndexed { index, button ->
-            button.layoutParams = LinearLayout.LayoutParams(0, dp(48), 1f).apply { if (index > 0) leftMargin = dp(4) }
-            button.setPadding(0, 0, 0, 0)
-        }
-        previous.contentDescription = "Vorheriger Titel"; play.contentDescription = "Wiedergabe"; next.contentDescription = "Nächster Titel"
-        val design = card(settingsPage)
-        design.addView(label("Kamerabereich", 18f))
-        val safeLabel = label("", 13f); design.addView(safeLabel)
-        val slider = SeekBar(this).apply { max = 35; progress = preferences.getInt("safe", 35).coerceIn(20, 55) - 20 }
-        fun safe(value: Int) {
-            safeLabel.text = "Links geschützt: $value % · noch nicht kalibriert"
-            if (preview.width == 0) return
-            val margin = preview.width * value / 100
-            val params = content.layoutParams as FrameLayout.LayoutParams
-            val available = preview.width - margin
-            if (params.leftMargin != margin || params.width != available) {
-                params.leftMargin = margin; params.width = available; content.layoutParams = params
-            }
-            if (lenses.layoutParams.width != margin) {
-                lenses.layoutParams = FrameLayout.LayoutParams(margin, -1)
-            }
-        }
-        preview.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> safe(slider.progress + 20) }
-        slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(bar: SeekBar?, value: Int, user: Boolean) {
-                safe(value + 20); preferences.edit().putInt("safe", value + 20).apply()
-            }
-            override fun onStartTrackingTouch(bar: SeekBar?) {}
-            override fun onStopTrackingTouch(bar: SeekBar?) {}
-        }); design.addView(slider); safe(slider.progress + 20)
-        val quickSetup = card(musicPage)
-        quickSetup.addView(label("Musik einrichten", 18f))
-        musicAccess = label("", 14f); quickSetup.addView(musicAccess)
-        button("Musikzugriff erlauben", quickSetup) { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
-        quickSetup.addView(label("YouTube Music oder Spotify öffnen und einen Titel abspielen. Danach hierher zurückkehren. Wir verwenden die Android-Mediensteuerung – kein zusätzliches Konto in dieser App nötig.", 13f))
-        val access = card(settingsPage)
-        access.addView(label("Einrichtung · Schritt für Schritt", 18f))
-        access.addView(label("1. Musikzugriff: In den Android-Einstellungen AHM3T45 STUDIO den Benachrichtigungszugriff erlauben. Dieser ist für die Mediensteuerung von YouTube Music, Spotify und ähnlichen Playern erforderlich.", 14f))
-        access.addView(label("Falls Android den Zugriff sperrt: App-Info von AHM3T45 STUDIO öffnen → Menü ⋮ → eingeschränkte Einstellungen zulassen, sofern vorhanden. Danach Musikzugriff erneut öffnen.", 13f))
-        button("1 · Musikzugriff erlauben", access) { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
-        status = label("", 14f).apply { setPadding(0, dp(12), 0, dp(8)); setLineSpacing(dp(3).toFloat(), 1f) }
-        access.addView(status)
-        access.addView(label("2. Shizuku: Installieren und öffnen. Unter „Über drahtloses Debugging starten“ die angezeigten Schritte befolgen. Dafür Entwickleroptionen und drahtloses Debugging aktivieren, mit dem Kopplungscode koppeln und Shizuku starten. Nach einem Neustart kann ein erneuter Start nötig sein.", 14f))
-        button("Shizuku herunterladen", access) {
-            try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://shizuku.rikka.app/download/"))) }
-            catch (_: android.content.ActivityNotFoundException) { Toast.makeText(this, "Bitte shizuku.rikka.app im Browser öffnen.", Toast.LENGTH_LONG).show() }
-        }
-        access.addView(label("3. Hier „Shizuku öffnen / freigeben“ antippen und AHM3T45 STUDIO erlauben. Wenn bereits abgelehnt: in Shizuku unter autorisierten Apps freigeben. Root ist dafür nicht erforderlich.", 14f))
-        button("Shizuku öffnen / freigeben", access) {
-            try {
-                when (ShizukuState.read(this)) {
-                    ShizukuState.NOT_ALLOWED -> Shizuku.requestPermission(1)
-                    else -> ShizukuState.openIntent(this)?.let { startActivity(it) }
-                        ?: Toast.makeText(this, "Bitte Shizuku zuerst installieren und starten.", Toast.LENGTH_LONG).show()
-                }
-            } catch (e: RuntimeException) { status.text = "Shizuku: ${e.message}" }
-        }
-        val rear = card(settingsPage)
-        rear.addView(label("Rückdisplay & Design", 22f))
-        rear.addView(label("Hintergründe, Uhr, Ladeanzeigen, Benachrichtigungen, Kamera und Quick Switch verwenden jetzt die zusammenhängende Mi-Back-Screen-Basis. Die Detailmenüs sind zunächst auf Englisch.", 14f))
-        button("Rückdisplay gestalten & steuern", rear) { startActivity(Intent(this, DisplayActivity::class.java)) }
-        rear.addView(label("Inhalt über dem Hintergrund", 16f))
-        val modes = listOf("Originaldesign / Uhr", "Musik", "Galatasaray / Fußball", "F1-Ergebnis")
-        val choices = RadioGroup(this)
-        val active = preferences.getInt("studio_mode", 0).coerceIn(0, 3)
-        modes.forEachIndexed { index, value -> choices.addView(RadioButton(this).apply { id = View.generateViewId(); text = value; isChecked = index == active; tag = index }) }
-        choices.setOnCheckedChangeListener { group, checked -> preferences.edit().putInt("studio_mode", group.findViewById<View>(checked).tag as Int).apply() }
-        rear.addView(choices)
-        button("Gewählte Ansicht starten", rear) {
-            if (de.rearstudio.core.RearCommands.isReady()) de.rearstudio.core.KeeperService.setWallpaper(this, true)
-            else Toast.makeText(this, "Bitte Shizuku freigeben.", Toast.LENGTH_LONG).show()
-        }
-        button("Rückdisplay-Ansicht ausschalten", rear) { de.rearstudio.core.KeeperService.setWallpaper(this, false) }
-        val displayHome = card(musicPage)
-        displayHome.addView(label("Dein Rückdisplay", 20f))
-        button("Hintergründe, Uhr & Ladeanzeigen", displayHome) { startActivity(Intent(this, DisplayActivity::class.java)) }
-        root.addView(label("Version 0.8 · Mi-Back-Screen-Basis integriert. Funktionen müssen auf deiner ROM geprüft werden.", 12f).apply {
-            setPadding(0, dp(20), 0, 0); setTextColor(0xffacb4c9.toInt())
-        })
-        Shizuku.addRequestPermissionResultListener(permissionListener)
-        Shizuku.addBinderReceivedListenerSticky(binderListener)
-        Shizuku.addBinderDeadListener(deadListener)
+    private fun notifications(){val box=StudioUi.card(this,body);box.addView(StudioUi.label(this,t("notifications"),20f));box.addView(StudioUi.label(this,t("notification_help"),13f,true))
+        box.addView(Switch(this).apply{text=t("notifications_enabled");setTextColor(StudioUi.TEXT);isChecked=NotificationSettings.isEnabled(this@MainActivity);setOnCheckedChangeListener{_,on->NotificationSettings.setEnabled(this@MainActivity,on);RearNotificationListener.switched(this@MainActivity,on);KeeperService.start(this@MainActivity,KeeperService.ACTION_UPDATE)}})
+        StudioUi.button(this,box,t("notification_apps")){apps()};StudioUi.button(this,box,t("notification_access")){de.rearstudio.notifications.NotificationAccess.openSettings(this)}
+        box.addView(Switch(this).apply{text=t("open_rear");setTextColor(StudioUi.TEXT);isChecked=prefs.getBoolean("notification_rear",true);setOnCheckedChangeListener{_,on->prefs.edit().putBoolean("notification_rear",on).apply()}})
+        StudioUi.button(this,box,t("notification_design")){startActivity(Intent(this,EditorActivity::class.java))}
+        StudioUi.button(this,box,t("notification_options")){startActivity(Intent(this,DisplayActivity::class.java))}
     }
-    override fun onResume() {
-        super.onResume(); refreshStatus()
-        try { manager.removeOnActiveSessionsChangedListener(sessionsListener); manager.addOnActiveSessionsChangedListener(sessionsListener, ComponentName(this, MusicAccessService::class.java), handler) } catch (_: SecurityException) {}
-        connectMusic()
+    private fun apps(){val intent=Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);val apps=packageManager.queryIntentActivities(intent,PackageManager.ResolveInfoFlags.of(0)).map{it.activityInfo.applicationInfo}.distinctBy{it.packageName}.filter{it.packageName!=packageName}.sortedBy{packageManager.getApplicationLabel(it).toString().lowercase()};val allowed=prefs.getStringSet("notification_apps",emptySet())!!.toMutableSet();val filter=prefs.getBoolean("notification_filter",false);val checked=BooleanArray(apps.size){!filter||allowed.contains(apps[it].packageName)}
+        MaterialAlertDialogBuilder(this).setTitle(t("notification_apps")).setMultiChoiceItems(apps.map{packageManager.getApplicationLabel(it).toString()}.toTypedArray(),checked){_,i,v->checked[i]=v}.setNegativeButton(t("cancel"),null).setPositiveButton(t("save")){_,_->prefs.edit().putBoolean("notification_filter",true).putStringSet("notification_apps",apps.filterIndexed{i,_->checked[i]}.map{it.packageName}.toSet()).apply();de.rearstudio.rear.RearHostActivity.notificationsChanged()}.show()
     }
-    private fun connectMusic() {
-        controller?.unregisterCallback(mediaCallback)
-        controller = try {
-            val sessions = manager.getActiveSessions(ComponentName(this, MusicAccessService::class.java))
-            sessions.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING } ?: sessions.firstOrNull()
-        } catch (_: SecurityException) { null }
-        controller?.registerCallback(mediaCallback, handler); renderMusic()
-    }
-    private fun control(action: android.media.session.MediaController.TransportControls.() -> Unit) {
-        try { controller?.transportControls?.action() } catch (_: RuntimeException) { connectMusic() }
-    }
-    private fun renderMusic() {
-        val metadata = controller?.metadata
-        title.text = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Keine aktive Musik"
-        artist.text = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Player starten oder Musikzugriff prüfen"
-        cover.setImageBitmap(metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_ART))
-        val actions = controller?.playbackState?.actions ?: 0L
-        val playing = controller?.playbackState?.state == PlaybackState.STATE_PLAYING
-        previous.isEnabled = actions and PlaybackState.ACTION_SKIP_TO_PREVIOUS != 0L
-        next.isEnabled = actions and PlaybackState.ACTION_SKIP_TO_NEXT != 0L
-        play.contentDescription = if (playing) "Pause" else "Wiedergabe"
-        play.text = if (playing) "Ⅱ" else "▶"
-        play.isEnabled = actions and (if (playing) PlaybackState.ACTION_PAUSE else PlaybackState.ACTION_PLAY) != 0L || actions and PlaybackState.ACTION_PLAY_PAUSE != 0L
-    }
-    private fun refreshStatus() = runOnUiThread {
-        if (::status.isInitialized) {
-            val displays = getSystemService(DisplayManager::class.java).displays.map { d -> DisplayCandidate(d.displayId, d.mode.physicalWidth, d.mode.physicalHeight, d.flags and android.view.Display.FLAG_PRIVATE != 0) }
-            val id = RearDisplayPick.choose(displays, null)
-            val state = when (ShizukuState.read(this)) {
-                ShizukuState.READY -> "bereit und freigegeben"
-                ShizukuState.NOT_ALLOWED -> "Freigabe erforderlich"
-                ShizukuState.BLOCKED -> "in Shizuku manuell freigeben"
-                ShizukuState.NOT_RUNNING -> "nicht gestartet – bitte in Shizuku starten"
-                ShizukuState.NOT_INSTALLED -> "nicht installiert"
-            }
-            val granted = getSystemService(NotificationManager::class.java).isNotificationListenerAccessGranted(ComponentName(this, MusicAccessService::class.java))
-            musicAccess.text = if (granted) "Musikzugriff: erlaubt. Player starten und Wiedergabe testen." else "Musikzugriff: noch nicht erlaubt. Bitte unten freigeben."
-            status.text = "Musikzugriff: ${if (granted) "erlaubt" else "fehlt"}\nShizuku: $state\nRückdisplay-Kandidat: ${id ?: "nicht erkannt"}"
-
+    private fun settings(){StudioUi.title(this,body,"your_studio");val languages=StudioUi.card(this,body);languages.addView(StudioUi.label(this,t("language"),18f));StudioUi.button(this,languages,"Deutsch · English · Türkçe"){val codes=listOf("de","en","tr");MaterialAlertDialogBuilder(this).setTitle(t("language")).setSingleChoiceItems(arrayOf("Deutsch","English","Türkçe"),codes.indexOf(resources.configuration.locales[0].language)){dialog,i->dialog.dismiss();getSystemService(LocaleManager::class.java).applicationLocales=LocaleList.forLanguageTags(codes[i])}.show()}
+        val appearance=StudioUi.card(this,body);StudioUi.button(this,appearance,t("accent")){
+            val scene=StudioScene.load(this);var red=android.graphics.Color.red(scene.accent);var green=android.graphics.Color.green(scene.accent);var blue=android.graphics.Color.blue(scene.accent);val form=StudioUi.column(this);val preview=View(this);form.addView(preview,LinearLayout.LayoutParams(-1,StudioUi.dp(this,44)));fun refresh(){preview.setBackgroundColor(android.graphics.Color.rgb(red,green,blue))};refresh();listOf("R","G","B").forEachIndexed{i,k->form.addView(StudioUi.label(this,k));form.addView(SeekBar(this).apply{max=255;progress=listOf(red,green,blue)[i];setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener{override fun onStartTrackingTouch(b:SeekBar?){};override fun onStopTrackingTouch(b:SeekBar?){};override fun onProgressChanged(b:SeekBar?,v:Int,user:Boolean){if(user){when(i){0->red=v;1->green=v;else->blue=v};refresh()}}})})};MaterialAlertDialogBuilder(this).setTitle(t("accent")).setView(form).setNegativeButton(t("cancel"),null).setPositiveButton(t("save")){_,_->scene.accent=android.graphics.Color.rgb(red,green,blue);StudioScene.save(this,scene);render()}.show()
         }
+        val box=StudioUi.card(this,body);box.addView(StudioUi.label(this,t("connections"),18f));status=StudioUi.label(this,"",14f);box.addView(status);StudioUi.button(this,box,t("connect_shizuku")){connect()};StudioUi.button(this,box,t("music_access")){MediaHub.settings(this)};StudioUi.button(this,box,t("check_music")){MediaHub.rebind(this);refreshStatus()}
+        box.addView(StudioUi.label(this,t("setup_help"),12f,true));StudioUi.button(this,box,t("shizuku_download")){try{startActivity(Intent(Intent.ACTION_VIEW,android.net.Uri.parse("https://shizuku.rikka.app/download/")))}catch(_:android.content.ActivityNotFoundException){}}
+        val advanced=StudioUi.card(this,body);StudioUi.button(this,advanced,t("advanced")){startActivity(Intent(this,DisplayActivity::class.java))};advanced.addView(StudioUi.label(this,t("advanced_help"),12f,true));val about=StudioUi.card(this,body);about.addView(StudioUi.label(this,"AHM3T45 STUDIO 0.9",17f));about.addView(StudioUi.label(this,t("source_note"),12f,true));refreshStatus()
     }
-    override fun onPause() { manager.removeOnActiveSessionsChangedListener(sessionsListener); controller?.unregisterCallback(mediaCallback); super.onPause() }
-    override fun onDestroy() {
-        sports.close()
-
-        Shizuku.removeRequestPermissionResultListener(permissionListener); Shizuku.removeBinderReceivedListener(binderListener); Shizuku.removeBinderDeadListener(deadListener)
-        super.onDestroy()
-    }
+    private fun connect(){try{when(de.rearstudio.core.ShizukuState.read(this)){de.rearstudio.core.ShizukuState.READY->Toast.makeText(this,t("connected"),Toast.LENGTH_SHORT).show();de.rearstudio.core.ShizukuState.NOT_ALLOWED->rikka.shizuku.Shizuku.requestPermission(7);else->de.rearstudio.core.ShizukuState.openIntent(this)?.let{startActivity(it)}?:Toast.makeText(this,t("need_shizuku"),Toast.LENGTH_LONG).show()}}catch(_:RuntimeException){Toast.makeText(this,t("connection_missing"),Toast.LENGTH_LONG).show()}}
+    private fun refreshStatus(){if(isDestroyed)return;val connected=de.rearstudio.core.ShizukuState.read(this)==de.rearstudio.core.ShizukuState.READY;val allowed=MediaHub.granted(this);val playing=MediaHub.controllers(this).size;status?.text="Shizuku: "+t(if(connected)"connected" else "connection_missing")+"\n"+t("music_access")+": "+t(if(allowed)"allowed" else "missing");musicStatus?.text=t(if(!allowed)"access_missing" else if(playing==0)"start_player" else "music_ready")}
+    override fun onResume(){super.onResume();if(::body.isInitialized)render();handler.post(pulse)}
+    override fun onPause(){handler.removeCallbacks(pulse);super.onPause()}
+    override fun onSaveInstanceState(out:Bundle){super.onSaveInstanceState(out);out.putInt("page",page);out.putInt("contentTab",contentTab)}
+    override fun onDestroy(){backdrops.forEach{it.release()};sport?.close();canvas?.dispose();musicCanvas?.dispose();shell.shutdownNow();rikka.shizuku.Shizuku.removeRequestPermissionResultListener(listener);rikka.shizuku.Shizuku.removeBinderReceivedListener(binder);super.onDestroy()}
 }

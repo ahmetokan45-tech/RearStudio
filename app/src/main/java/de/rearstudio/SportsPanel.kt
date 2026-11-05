@@ -43,39 +43,36 @@ class SportsPanel(private val activity: Activity, parent: LinearLayout) {
         parent.addView(this, LinearLayout.LayoutParams(-1, -2)); setOnClickListener { action() }
         buttons.getOrPut(group) { mutableListOf() }.add(this)
     }
+    private fun t(key:String)=StudioUi.text(activity,key)
+    private fun compact(key:String,raw:String):String {
+        val lines=raw.lines().filter{it.isNotBlank()}
+        return if(key=="football"&&lines.size>=3&&lines[1].matches(Regex("[0-9]+ : [0-9]+"))) "${lines[0].take(3).uppercase()}    ${lines[1]}    ${lines[2].take(3).uppercase()}\n${lines.getOrNull(3)?:""}"
+        else if(key=="f1-results") lines.firstOrNull().orEmpty()+"\n"+lines.filter{it.matches(Regex("^[0-9A-Z]+\\. .+"))}.take(3).joinToString("\n")
+        else raw
+    }
+    private fun detail(key:String){AlertDialog.Builder(activity).setTitle(t("details")).setMessage(prefs.getString("latest_$key",null)?:t("load_results")).setPositiveButton(t("close"),null).show()}
     init {
-        val football = card(parent, 0xff38242c.toInt())
-        team = text(prefs.getString("results_team_name", "Galatasaray") ?: "Galatasaray", 22f); football.addView(team)
-        football.addView(text("Letztes verfügbares Ergebnis", 16f))
-        footballResult = text("Tippe auf „Ergebnis laden“. Der Spielstand erscheint hier direkt in der App.", 18f)
-        football.addView(footballResult)
-        button(football, "Ergebnis laden / aktualisieren", "football") { fetchFootball() }
-        button(football, "Verein wählen", "football") { editTeam() }
-        football.addView(text("Quelle: TheSportsDB · Gratiszugang: begrenztes Heimspiel-Ergebnis. Kann ältere Spiele zeigen und Auswärtsspiele auslassen. Kein Live-Ticker.", 12f))
-        val f1 = card(parent, 0xff222d40.toInt())
-        f1.addView(text("Formel 1", 22f))
-        f1.addView(text("Letztes veröffentlichtes Rennergebnis", 16f))
-        val result = text("Hier erscheinen Fahrer, Platzierungen, Teams und Punkte.")
-        f1.addView(result)
-        button(f1, "Rennergebnis laden / aktualisieren", "f1-results") {
-            request("f1-results", result, "Rennergebnis wird geladen …") {
-                SportResults.f1(get("https://api.jolpi.ca/ergast/f1/current/last/results.json")) + stamp("Jolpica-F1")
-            }
+        val football=card(parent,0xff20222b.toInt())
+        team=text(prefs.getString("results_team_name","Galatasaray")?:"Galatasaray",18f);football.addView(team)
+        footballResult=text(prefs.getString("latest_football",null)?.let{compact("football",it)}?:t("load_results"),24f).apply{typeface=android.graphics.Typeface.create("sans-serif-medium",android.graphics.Typeface.NORMAL);maxLines=4;ellipsize=android.text.TextUtils.TruncateAt.END};football.addView(footballResult)
+        football.addView(text(t("published"),11f))
+        button(football,t("refresh"),"football"){fetchFootball()}
+        button(football,t("select_club"),"football"){editTeam()}
+        button(football,t("details"),"football"){detail("football")}
+        val f1=card(parent,0xff20222b.toInt());f1.addView(text(t("f1"),18f))
+        val result=text(prefs.getString("latest_f1-results",null)?.let{compact("f1-results",it)}?:t("load_results"),20f).apply{maxLines=4;ellipsize=android.text.TextUtils.TruncateAt.END};f1.addView(result);f1.addView(text(t("published"),11f))
+        button(f1,t("refresh"),"f1-results"){request("f1-results",result,t("loading")){SportResults.f1(get("https://api.jolpi.ca/ergast/f1/current/last/results.json"))+stamp("Jolpica-F1")}}
+        button(f1,t("details"),"f1-results"){detail("f1-results")}
+        button(f1,t("favorite_driver"),"f1-results"){
+            val names=prefs.getString("latest_f1-results","")!!.lines().filter{it.matches(Regex("^[0-9A-Z]+\\. .+"))}.map{it.substringAfter(". ")}
+            if(names.isEmpty())Toast.makeText(activity,t("load_results"),Toast.LENGTH_SHORT).show() else AlertDialog.Builder(activity).setTitle(t("favorite_driver")).setSingleChoiceItems((listOf(t("automatic"))+names).toTypedArray(),0){dialog,i->prefs.edit().putString("f1_favorite",if(i==0)"" else names[i-1]).apply();dialog.dismiss()}.show()
         }
-        val schedule = text("Nächster Grand Prix: noch nicht geladen."); f1.addView(schedule)
-        button(f1, "Nächsten Renntermin laden", "f1-schedule") {
-            request("f1-schedule", schedule, "Renntermin wird geladen …") {
-                val races = get("https://api.jolpi.ca/ergast/f1/current/next.json").getJSONObject("MRData").getJSONObject("RaceTable").getJSONArray("Races")
-                val value = if (races.length() == 0) "Kein nächstes Rennen veröffentlicht." else {
-                    val race = races.getJSONObject(0)
-                    val date = race.getString("date"); val time = race.optString("time")
-                    val local = if (time.isNotBlank()) DateTimeFormatter.ofPattern("EEE, dd.MM.yyyy · HH:mm z", Locale.GERMAN).withZone(ZoneId.systemDefault()).format(Instant.parse(date + "T" + time)) else date
-                    race.getString("raceName") + "\n" + local + "\n" + race.getJSONObject("Circuit").getString("circuitName")
-                }
-                value + stamp("Jolpica-F1")
-            }
-        }
-        f1.addView(text("Quelle: Jolpica-F1 · Ergebnisse nach Veröffentlichung. Keine Live-Rundenzeiten oder laufende Rennpositionen.", 12f))
+        val schedule=text(t("next_race"),13f);f1.addView(schedule)
+        button(f1,t("next_race"),"f1-schedule"){request("f1-schedule",schedule,t("loading")){
+            val races=get("https://api.jolpi.ca/ergast/f1/current/next.json").getJSONObject("MRData").getJSONObject("RaceTable").getJSONArray("Races")
+            (if(races.length()==0)t("no_schedule") else {val race=races.getJSONObject(0);val date=race.getString("date");val time=race.optString("time");val local=if(time.isNotBlank())DateTimeFormatter.ofPattern("EEE, dd.MM.yyyy · HH:mm z",Locale.getDefault()).withZone(ZoneId.systemDefault()).format(Instant.parse(date+"T"+time))else date;race.getString("raceName")+"\n"+local})+stamp("Jolpica-F1")
+        }}
+        parent.addView(text(t("result_limit"),12f))
     }
     private fun fetchFootball() {
         val selectedId = teamId
@@ -84,28 +81,28 @@ class SportsPanel(private val activity: Activity, parent: LinearLayout) {
         }
     }
     private fun editTeam() {
-        val name = EditText(activity).apply { hint = "Vereinsname, z. B. Galatasaray"; setSingleLine(); setText(team.text) }
+        val name = EditText(activity).apply { hint = t("search_hint"); setSingleLine(); setText(team.text) }
         val form = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), dp(8), dp(20), dp(8)); addView(name) }
-        val info = text("Wir suchen den Verein in TheSportsDB. Gespeichert wird erst nach deiner Auswahl."); form.addView(info)
-        val dialog = AlertDialog.Builder(activity).setTitle("Verein wählen").setView(form).setNegativeButton("Abbrechen", null).setPositiveButton("Suchen", null).create()
+        val info = text(t("search_info")); form.addView(info)
+        val dialog = AlertDialog.Builder(activity).setTitle(t("select_club")).setView(form).setNegativeButton(t("cancel"), null).setPositiveButton(t("search"), null).create()
         dialog.setOnShowListener {
             val search = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             search.setOnClickListener {
                 val query = name.text.toString().trim()
-                if (query.length !in 2..60) { name.error = "Bitte 2 bis 60 Zeichen eingeben."; return@setOnClickListener }
+                if (query.length !in 2..60) { name.error = t("invalid_team"); return@setOnClickListener }
                 if (busy.contains("football")) return@setOnClickListener
                 if (!ready("team-search")) return@setOnClickListener
-                busy.add("football"); buttons["football"]?.forEach { it.isEnabled = false }; search.isEnabled = false; info.text = "Verein wird gesucht …"
+                busy.add("football"); buttons["football"]?.forEach { it.isEnabled = false }; search.isEnabled = false; info.text = t("searching")
                 worker.execute {
                     var found: Pair<String, String>? = null
                     val message = try {
                         val teams = get("https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=" + URLEncoder.encode(query, "UTF-8")).optJSONArray("teams")
                         val candidates = if (teams == null) emptyList() else (0 until teams.length()).map { teams.getJSONObject(it) }
                         val match = candidates.firstOrNull { it.optString("strSport") == "Soccer" && it.optString("idTeam").matches(Regex("[0-9]+")) }
-                        if (match == null) "Kein Fußballverein gefunden. Bitte den Namen genauer eingeben." else {
+                        if (match == null) t("no_team") else {
                             found = match.getString("idTeam") to match.getString("strTeam"); ""
                         }
-                    } catch (_: Exception) { "Suche derzeit nicht möglich. Bitte Verbindung prüfen und später erneut versuchen." }
+                    } catch (_: Exception) { t("network_error") }
                     activity.runOnUiThread {
                         if (!closed) {
                             busy.remove("football"); buttons["football"]?.forEach { it.isEnabled = true }
@@ -116,10 +113,10 @@ class SportsPanel(private val activity: Activity, parent: LinearLayout) {
                                     dialog.dismiss()
                                     AlertDialog.Builder(activity).setTitle("${selected.second} auswählen?")
                                         .setMessage("Ergebnisse für diesen Fußballverein laden?")
-                                        .setNegativeButton("Abbrechen", null).setPositiveButton("Auswählen") { _, _ ->
+                                        .setNegativeButton(t("cancel"), null).setPositiveButton(t("select")) { _, _ ->
                                             teamId = selected.first; team.text = selected.second
                                             prefs.edit().putString("results_team_id", selected.first).putString("results_team_name", selected.second).remove("latest_football").apply()
-                                            footballResult.text = "Verein geändert. Tippe auf „Ergebnis laden“."
+                                            footballResult.text = t("load_results")
                                         }.show()
                                 }
                             }
@@ -133,7 +130,7 @@ class SportsPanel(private val activity: Activity, parent: LinearLayout) {
         if (closed || busy.contains(key)) return false
         val now = SystemClock.elapsedRealtime()
         if (attempted[key]?.let { now - it < 30_000 } == true) {
-            Toast.makeText(activity, "Bitte 30 Sekunden bis zur nächsten Anfrage warten.", Toast.LENGTH_SHORT).show(); return false
+            Toast.makeText(activity, t("wait_refresh"), Toast.LENGTH_SHORT).show(); return false
         }
         attempted[key] = now; return true
     }
@@ -142,19 +139,19 @@ class SportsPanel(private val activity: Activity, parent: LinearLayout) {
         busy.add(key); buttons[key]?.forEach { it.isEnabled = false }; target.text = loading
         worker.execute {
             val value = try { fetch().also { if (key == "football" || key == "f1-results") prefs.edit().putString("latest_$key", it).apply() } } catch (e: Exception) {
-                if (e is IllegalStateException) e.message ?: "Daten nicht verfügbar." else "Keine Daten geladen. Bitte Internetverbindung prüfen und später erneut versuchen."
+                if (e is IllegalStateException) e.message ?: "Daten nicht verfügbar." else t("network_error")
             }
             activity.runOnUiThread {
-                if (!closed) { busy.remove(key); buttons[key]?.forEach { it.isEnabled = true }; target.text = value }
+                if (!closed) { busy.remove(key); buttons[key]?.forEach { it.isEnabled = true }; target.text = compact(key,value) }
             }
         }
     }
-    private fun stamp(source: String) = "\n\nAbgerufen: " + DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm", Locale.GERMAN).withZone(ZoneId.systemDefault()).format(Instant.now()) + " · " + source
+    private fun stamp(source: String) = "\n\n"+t("retrieved")+": " + DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm", Locale.getDefault()).withZone(ZoneId.systemDefault()).format(Instant.now()) + " · " + source
     private fun get(address: String): JSONObject {
         val conn = URL(address).openConnection() as HttpsURLConnection
         try {
             conn.connectTimeout = 10_000; conn.readTimeout = 10_000; conn.instanceFollowRedirects = false
-            conn.setRequestProperty("User-Agent", "AHM3T45Studio/0.8")
+            conn.setRequestProperty("User-Agent", "AHM3T45Studio/0.9")
             if (conn.responseCode == 429) throw IllegalStateException("Anbieterlimit erreicht. Bitte später erneut versuchen.")
             if (conn.responseCode != 200) throw IllegalStateException("Datenquelle derzeit nicht verfügbar (${conn.responseCode}).")
             val bytes = conn.inputStream.use { input ->
