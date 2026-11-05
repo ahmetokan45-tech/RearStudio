@@ -154,7 +154,7 @@ class SportsPanel(private val activity: Activity, parent: LinearLayout) {
         val conn = URL(address).openConnection() as HttpsURLConnection
         try {
             conn.connectTimeout = 10_000; conn.readTimeout = 10_000; conn.instanceFollowRedirects = false
-            conn.setRequestProperty("User-Agent", "AHM3T45Studio/0.7")
+            conn.setRequestProperty("User-Agent", "AHM3T45Studio/0.8")
             if (conn.responseCode == 429) throw IllegalStateException("Anbieterlimit erreicht. Bitte später erneut versuchen.")
             if (conn.responseCode != 200) throw IllegalStateException("Datenquelle derzeit nicht verfügbar (${conn.responseCode}).")
             val bytes = conn.inputStream.use { input ->

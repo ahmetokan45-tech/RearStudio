@@ -15,4 +15,7 @@ The launcher A mark is an original vector; no club or Formula 1 logos are used.
 Terms: https://www.thesportsdb.com/docs_terms_of_use.php
 Personal development build only; app-store distribution requires the provider's paid subscription. No artwork is fetched. The free previous-team endpoint is limited and documents home events only; it is not a live feed or guaranteed latest fixture across all competitions.
 F1 results: https://api.jolpi.ca/ergast/f1/current/last/results.json (Jolpica-F1).
-RearBridge.kt adapts the fixed am-start and reflective Shizuku newProcess pattern from Mi Back Screen RearCommands.kt, MIT, same pinned revision above. No other Xiaomi commands or persistent settings changes are included.
+Historical 0.7 implementation (removed in 0.8): RearBridge.kt adapts the fixed am-start and reflective Shizuku newProcess pattern from Mi Back Screen RearCommands.kt, MIT, same pinned revision above. No other Xiaomi commands or persistent settings changes are included.
+
+0.8 imports the complete Mi Back Screen Android implementation and 37 upstream test files from revision 842d0ca875a16b568d931785e80fd47f1cd10208, copyright (c) 2026 Andrew Worgan, MIT (LICENSE). Package renamed from com.backscreen.wallpaper to de.rearstudio; upstream MainActivity renamed DisplayActivity. Resources and manifest are adapted for the Studio launcher, icon, internet-enabled sport cards and StudioRearLayer. Upstream app title and privacy text are updated; its original credit remains here, in the packaged licence and About text. The old Studio test-only bridge is removed.
+Dependencies additionally include AndroidX AppCompat (Apache-2.0), Material Components Android (Apache-2.0), AndroidX Palette (Apache-2.0), and test-only Robolectric (MIT).

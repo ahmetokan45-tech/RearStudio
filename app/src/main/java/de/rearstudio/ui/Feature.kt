@@ -1,0 +1,64 @@
+package de.rearstudio.ui
+
+import de.rearstudio.R
+
+/** One part of a section's help: a heading and what it says. */
+data class HelpSection(val title: Int, val text: Int)
+
+/**
+ * The app's five sections, one tab each: its place in the bottom bar, its name, and its help,
+ * behind the ? in the top bar.
+ */
+enum class Feature(
+    val navId: Int,
+    val label: Int,
+    val help: List<HelpSection>,
+) {
+    WALLPAPER(
+        R.id.nav_wallpaper, R.string.tab_wallpaper,
+        listOf(
+            HelpSection(R.string.help_panning_title, R.string.help_panning),
+            HelpSection(R.string.help_display_title, R.string.help_display),
+            HelpSection(R.string.help_dimmed_title, R.string.help_dimmed),
+        ),
+    ),
+    NOTIFICATIONS(
+        R.id.nav_notifications, R.string.tab_notifications,
+        listOf(
+            HelpSection(R.string.help_notifications_off_title, R.string.help_notifications_off),
+            HelpSection(R.string.help_notifications_locked_title, R.string.help_notifications_locked),
+        ),
+    ),
+    BATTERY(
+        R.id.nav_battery, R.string.tab_battery,
+        listOf(
+            HelpSection(R.string.help_battery_when_title, R.string.help_battery_when),
+            HelpSection(R.string.help_battery_glow_title, R.string.help_battery_glow),
+            HelpSection(R.string.help_battery_xiaomi_title, R.string.help_battery_xiaomi),
+        ),
+    ),
+    MIRROR(
+        R.id.nav_mirror, R.string.tab_mirror,
+        listOf(
+            HelpSection(R.string.help_mirror_lock_title, R.string.help_mirror_lock),
+            HelpSection(R.string.good_to_know, R.string.mirror_limits),
+            HelpSection(R.string.help_mirror_uninstall_title, R.string.help_mirror_uninstall),
+        ),
+    ),
+    CAMERA(
+        R.id.nav_camera, R.string.tab_camera,
+        listOf(
+            HelpSection(R.string.camera_close_title, R.string.camera_close),
+            HelpSection(R.string.good_to_know, R.string.camera_limits),
+        ),
+    );
+
+    companion object {
+        fun forNavId(id: Int) = entries.firstOrNull { it.navId == id }
+    }
+}
+
+/** A tab that keeps itself up to date while it's showing; the app calls this every second. */
+interface Refreshable {
+    fun refresh()
+}

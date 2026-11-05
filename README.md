@@ -1,33 +1,26 @@
-# AHM3T45 STUDIO 0.7 – device-test build
+# AHM3T45 STUDIO 0.8 – Mi Back Screen integration
 
-Android personal hub for the Xiaomi 17 Pro Max / HyperOS 4 China-ROM target. Package `de.rearstudio`; this remains the same app identity. **No rear-display compatibility or successful output has been verified on Xiaomi hardware.**
+The full MIT-licensed Mi Back Screen implementation is now the rear-display foundation, pinned to revision 842d0ca875a16b568d931785e80fd47f1cd10208. The Studio launcher, name, icon, music and native sports cards remain. The old isolated ten-minute test bridge is removed.
 
-## Included
-- Adaptive and monochrome launcher icon; Musik / Sport / Einstellungen tabs.
-- Native camera-aware album-art music preview with stored left safe area (20–55%).
-- Android MediaSession metadata and previous/play/pause/next controls. YouTube Music, Spotify and other players must expose a media session. Notification-listener access is required; there is no separate provider login. Player compatibility is not yet verified on the phone.
-- Step-by-step in-app music and Shizuku setup guide, actual notification-access status, Shizuku connection/permission status and rear-display detection.
-- Native Galatasaray result card with score, date, source and retrieval time. TheSportsDB's free previous-team endpoint is limited to home events; an older event may be returned and away fixtures may be missing. This is not live scoring. Missing scores are not converted to zero. A club-name search with confirmation changes the actual team ID, not just the heading.
-- Native F1 last-published race classification with drivers, teams, points and timing/status; next-race schedule in local device time. Source: Jolpica-F1. No live positions or live laps.
-- Sports data is fetched on button press, not automatically. Per-action 30-second throttle; bounded response and network timeouts. The last successfully loaded football/F1 result is stored locally with source/retrieval time for the rear-display test. Errors do not overwrite that snapshot. No API secrets are required for these development endpoints. No browser links or WebViews in Sport.
+## Usage
+Open Studio → Einstellungen → Rückdisplay gestalten & steuern (also accessible from Musik). The imported detail menus currently use English. They include image/GIF backgrounds and galleries, clock, camera-safe positioning, charging styles, notifications, schedules, display settings, camera and Quick Switch. Each feature stays opt-in. A menu item Musik & Sport returns to Studio.
 
-## Experimental rear-display bridge
-Settings → Rückdisplay-Gerätetest offers clock, music, football result and F1 result. On explicit confirmation, the app uses Shizuku's reflective process API to execute exactly `am start --display <detected-id>` for its own token-gated RearHostActivity. It never passes user-entered shell text. The secondary-display host checks token, display ID and a ten-minute session lifetime; invalid/main-display launches are rejected. Stop clears the session and the host closes when active. Separate task affinity prevents removing the main app task.
+Under Studio Settings choose Originaldesign / Uhr, Musik, Galatasaray / Fußball, or F1-Ergebnis, then Gewählte Ansicht starten. Studio content is a layer inside the imported host/keeper; charging and notification layers remain above it. Original mode leaves the imported wallpaper/clock untouched. Studio music artwork fills its background; text/controls use the saved left safe area. Sports show the latest successfully retrieved snapshot and timestamp. Rückdisplay-Ansicht ausschalten turns the wallpaper feature off; independently enabled charging/Quick Switch features are controlled in their own menus.
 
-A successful command means **only that Android accepted the launch request**, not that a picture appeared. HyperOS may block, hide or later close it. There is no display wake command, lock-screen bypass, Xiaomi package force-stop, density/rotation/timeout change or keeper/background service. Keep the phone unlocked and manually wake the rear display for the first test. Sports on the rear host are snapshots, not a separate live feed. Reopening the main app does not itself stop a test; use Test beenden. Test-host artwork/content/touch placement needs hardware calibration.
+## Features and limits
+- Package remains de.rearstudio. Minimum Android 15 (API 35), target/compile API 36; Java 21 for tests, bytecode target 17.
+- Complete upstream keeper service, Xiaomi rear-policy metadata, launch/move fallback, gestures, notification listener, widget and tiles are included together. User-enabled features may change Xiaomi display settings temporarily and restore them through the upstream lifecycle. This is more than the old fixed launch command.
+- Studio music uses Android MediaSession plus its separate MusicAccessService notification-access grant. YouTube Music/Spotify must expose metadata and playback actions; no provider login is used. The upstream rear-notification feature has its own listener and grant. The setup guide reports actual Studio music access and Shizuku status.
+- Galatasaray result card: TheSportsDB free previous-team endpoint is limited to a home event. Data may be old; away fixtures can be missing. Club search changes the actual team ID. Missing scores are never fabricated as 0–0.
+- F1 last-published race results and next-race schedule: Jolpica-F1. No live positions/laps. Results load on request with source/time, bounded HTTPS response/timeouts and a per-action throttle. No scraping, external-browser results or paid keys in this build.
+- Original Mi Back Screen remains a separate app, with separate settings. Its saved images/settings are not automatically imported. Only images chosen in Studio's own picker are copied/accessed.
 
-## Setup on the phone
-1. Grant AHM3T45 STUDIO notification access using Musikzugriff erlauben. If Android blocks sideloaded settings, allow restricted settings in the app's info menu if offered, then retry.
-2. Start music in YouTube Music/Spotify; return and check actual title/cover/controls.
-3. Install/start Shizuku via its own wireless-debugging pairing guide. Authorize this app. After reboot Shizuku may need starting again.
-4. In Settings, check Shizuku ready and a detected rear candidate. Select Uhrtest and confirm Rückdisplay testen. Inspect the physical rear display. Then stop the test.
-5. Only after the clock is visible, try music; load sports data on the main display before testing those modes. Record exact ROM version and any start status. Never infer compatibility from detection alone.
+## Testing boundary
+Shizuku was confirmed connected on the user's Xiaomi with version 0.7. Its isolated rear-host start was accepted but the host did not remain active. Version 0.8 imports the actual upstream mechanism, including miui.rear.policy and keeper fallback. This does not itself prove HyperOS 4 compatibility. The integrated version must be tested on the phone. No blanket claim of stable rear-display, camera, charging or Quick Switch operation is made.
 
-## Build and downloads
-JDK 17 and Android SDK 35: `./gradlew testDebugUnitTest lintDebug assembleDebug`.
-GitHub Actions → Debug APK → successful run → Artifacts → AHM3T45-STUDIO-debug-apk. Unzip and install AHM3T45-STUDIO-0.7-debug.apk. Artifact retained 14 days. Debug signing keys can differ between CI runs; uninstall may be required, losing local preferences/access grants.
+## Build / downloads
+JDK 21 and Android SDK 36: `./gradlew testDebugUnitTest lintDebug assembleDebug`.
+The repository includes the full set of 37 upstream test files plus Studio tests. GitHub Actions → Debug APK → successful run → AHM3T45-STUDIO-debug-apk contains AHM3T45-STUDIO-0.8-debug.apk. Artifacts last 14 days. Debug signing keys can differ across builds; do not uninstall an installed app without considering lost settings/grants. This integration does not uninstall or replace the separate Mi Back Screen app.
 
-## Scope and provenance
-This remains a personal development/device-test build, not a finished always-on rear-display app. Free API availability/coverage is controlled by providers. TheSportsDB's terms require a paid subscription for app-store publication; no app-store publication is set up here.
-
-The earlier chat's 0.2/0.3 sandbox ZIPs were not retrievable and the GitHub repository was initially empty. This is a new minimal implementation of those requirements. Display detection, Shizuku status and the bounded launch pattern derive from MIT Mi Back Screen. See THIRD_PARTY_NOTICES.md and LICENSE.
+## Provenance
+The full original MIT notice is in LICENSE and packaged assets; detailed origins/changes are in THIRD_PARTY_NOTICES.md. About credits the original author/project and explains Studio's added network access. Personal development build; TheSportsDB app-store publication requires its paid subscription. No app-store publication is configured.

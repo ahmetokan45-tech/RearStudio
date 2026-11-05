@@ -39,10 +39,7 @@ class MainActivity : Activity() {
     private lateinit var next: Button
     private lateinit var sports: SportsPanel
     private lateinit var musicAccess: TextView
-    private lateinit var rearStatus: TextView
-    private lateinit var rearStart: Button
-    private var rearBusy = false
-    private val rearWorker = java.util.concurrent.Executors.newSingleThreadExecutor()
+
     private val preferences by lazy { getSharedPreferences("design", MODE_PRIVATE) }
     private val permissionListener = Shizuku.OnRequestPermissionResultListener { _, _ -> refreshStatus() }
     private val binderListener = Shizuku.OnBinderReceivedListener { refreshStatus() }
@@ -208,28 +205,25 @@ class MainActivity : Activity() {
             } catch (e: RuntimeException) { status.text = "Shizuku: ${e.message}" }
         }
         val rear = card(settingsPage)
-        rear.addView(label("4 · Rückdisplay-Gerätetest", 18f))
-        rear.addView(label("Zuerst mit der Uhr testen. Rückdisplay einschalten, Telefon entsperrt lassen und prüfen, ob die Ansicht hinten erscheint. HyperOS kann den Start blockieren. Ein akzeptierter Startbefehl allein bestätigt keine sichtbare Ausgabe.", 14f))
-        val mode = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("Uhrtest", "Musik", "Fußball-Ergebnis", "F1-Ergebnis")) }
-        rear.addView(mode)
-        rearStatus = label("Noch kein Rückdisplay-Test ausgeführt.", 13f); rear.addView(rearStatus)
-        rearStart = button("Rückdisplay testen", rear) {
-            if (!rearBusy) {
-                AlertDialog.Builder(this).setTitle("Ansicht auf dem Rückdisplay testen?")
-                    .setMessage("Die App versucht ihre eigene Ansicht über Shizuku auf dem erkannten Rückdisplay zu starten. Keine Xiaomi-Systemeinstellungen werden geändert. Der Test endet nach spätestens 10 Minuten oder über „Test beenden“.")
-                    .setNegativeButton("Abbrechen", null).setPositiveButton("Test starten") { _, _ ->
-                        rearBusy = true; rearStart.isEnabled = false; rearStatus.text = "Start wird versucht …"
-                        val selected = listOf("clock", "music", "football", "f1-results")[mode.selectedItemPosition]
-                        rearWorker.execute {
-                            val result = RearBridge.launch(applicationContext, selected)
-                            runOnUiThread { if (!isDestroyed) { rearBusy = false; rearStatus.text = result; refreshStatus() } }
-                        }
-                    }.show()
-            }
+        rear.addView(label("Rückdisplay & Design", 22f))
+        rear.addView(label("Hintergründe, Uhr, Ladeanzeigen, Benachrichtigungen, Kamera und Quick Switch verwenden jetzt die zusammenhängende Mi-Back-Screen-Basis. Die Detailmenüs sind zunächst auf Englisch.", 14f))
+        button("Rückdisplay gestalten & steuern", rear) { startActivity(Intent(this, DisplayActivity::class.java)) }
+        rear.addView(label("Inhalt über dem Hintergrund", 16f))
+        val modes = listOf("Originaldesign / Uhr", "Musik", "Galatasaray / Fußball", "F1-Ergebnis")
+        val choices = RadioGroup(this)
+        val active = preferences.getInt("studio_mode", 0).coerceIn(0, 3)
+        modes.forEachIndexed { index, value -> choices.addView(RadioButton(this).apply { id = View.generateViewId(); text = value; isChecked = index == active; tag = index }) }
+        choices.setOnCheckedChangeListener { group, checked -> preferences.edit().putInt("studio_mode", group.findViewById<View>(checked).tag as Int).apply() }
+        rear.addView(choices)
+        button("Gewählte Ansicht starten", rear) {
+            if (de.rearstudio.core.RearCommands.isReady()) de.rearstudio.core.KeeperService.setWallpaper(this, true)
+            else Toast.makeText(this, "Bitte Shizuku freigeben.", Toast.LENGTH_LONG).show()
         }
-        button("Test beenden", rear) { RearBridge.stop(this); rearStatus.text = "Test beendet. Die Testansicht schließt sich, sobald sie wieder aktiv ist." }
-        rear.addView(label("Musik benötigt den Musikzugriff oben. Sport zeigt den zuletzt in der App geladenen Stand samt Abrufzeit. Keine Live-Sportdaten. Der Test ist kein dauerhafter Hintergrunddienst; Sperrbildschirm und ROM-Beschränkungen werden nicht umgangen.", 12f))
-        root.addView(label("Version 0.7 · Ergebnis-Karten & Rückdisplay-Gerätetest. HyperOS 4 China-ROM muss am Gerät geprüft werden.", 12f).apply {
+        button("Rückdisplay-Ansicht ausschalten", rear) { de.rearstudio.core.KeeperService.setWallpaper(this, false) }
+        val displayHome = card(musicPage)
+        displayHome.addView(label("Dein Rückdisplay", 20f))
+        button("Hintergründe, Uhr & Ladeanzeigen", displayHome) { startActivity(Intent(this, DisplayActivity::class.java)) }
+        root.addView(label("Version 0.8 · Mi-Back-Screen-Basis integriert. Funktionen müssen auf deiner ROM geprüft werden.", 12f).apply {
             setPadding(0, dp(20), 0, 0); setTextColor(0xffacb4c9.toInt())
         })
         Shizuku.addRequestPermissionResultListener(permissionListener)
@@ -279,13 +273,13 @@ class MainActivity : Activity() {
             val granted = getSystemService(NotificationManager::class.java).isNotificationListenerAccessGranted(ComponentName(this, MusicAccessService::class.java))
             musicAccess.text = if (granted) "Musikzugriff: erlaubt. Player starten und Wiedergabe testen." else "Musikzugriff: noch nicht erlaubt. Bitte unten freigeben."
             status.text = "Musikzugriff: ${if (granted) "erlaubt" else "fehlt"}\nShizuku: $state\nRückdisplay-Kandidat: ${id ?: "nicht erkannt"}"
-            if (::rearStart.isInitialized) rearStart.isEnabled = !rearBusy && id != null && ShizukuState.read(this) == ShizukuState.READY
+
         }
     }
     override fun onPause() { manager.removeOnActiveSessionsChangedListener(sessionsListener); controller?.unregisterCallback(mediaCallback); super.onPause() }
     override fun onDestroy() {
         sports.close()
-        rearWorker.shutdownNow()
+
         Shizuku.removeRequestPermissionResultListener(permissionListener); Shizuku.removeBinderReceivedListener(binderListener); Shizuku.removeBinderDeadListener(deadListener)
         super.onDestroy()
     }

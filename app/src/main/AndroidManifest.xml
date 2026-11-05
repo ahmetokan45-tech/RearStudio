@@ -1,14 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
     <uses-permission android:name="android.permission.INTERNET" />
-    <queries><package android:name="moe.shizuku.privileged.api" /></queries>
-    <application android:theme="@android:style/Theme.Material.NoActionBar" android:label="AHM3T45 STUDIO" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:usesCleartextTraffic="false" android:allowBackup="false" android:supportsRtl="true">
-        <activity android:name=".MainActivity" android:exported="true">
+    <!--
+        The upstream display permissions this app requests. None gives access to your data, and the Studio sport cards additionally use internet access. (Shizuku access is separate and is approved by you inside the
+        Shizuku app.)
+    -->
+    <!-- A small service keeps the wallpaper on the back screen while the app is closed. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!--
+        Schedules: switch on and off at the exact times you set (you allow this in Settings),
+        and set the next switch again after the phone restarts. After a restart, the back
+        screen also carries on as it was.
+    -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- The back screen clock: a moment awake each minute to draw the new time. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!--
+        Quick Switch: the notification while an app is on the back screen, with Bring back.
+        Asked for once, when Quick Switch is switched on; the app works without it.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+        Quick Switch says which app it moved ("YouTube is on the back screen"). This lets the
+        app read the names of apps with a launcher icon; it can't see anything else about them.
+        And whether Shizuku is installed, to offer to get it or open it.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <package android:name="moe.shizuku.privileged.api" />
+    </queries>
+
+    <!-- No backups, and nothing moved to a new phone either (see data_extraction_rules.xml). -->
+    <application
+        android:name=".App"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.BackScreen" android:usesCleartextTraffic="false">
+
+        <!--
+            Xiaomi's opt-in for showing activities on the rear display (found in the open source
+            MiRearScreenSwitcher app). Lets RearHostActivity be launched straight there.
+        -->
+        <meta-data
+            android:name="miui.rear.policy"
+            android:value="1" />
+
+        <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Material.NoActionBar">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
-        <activity android:name=".RearHostActivity" android:exported="true" android:taskAffinity="de.rearstudio.rear" android:excludeFromRecents="true" android:resizeableActivity="true" />
+        <activity android:name=".DisplayActivity" android:exported="false" />
         <service android:name=".MusicAccessService" android:label="AHM3T45 STUDIO Musikzugriff" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">
             <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>
         </service>
-        <provider android:name="rikka.shizuku.ShizukuProvider" android:authorities="${applicationId}.shizuku" android:multiprocess="false" android:enabled="true" android:exported="true" android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+        <!--
+            The app's tiles and its notification open it through this private name, which no
+            other app can use; MainActivity acts on what they ask only when it comes this way
+            (see LaunchCommand).
+        -->
+        <activity-alias
+            android:name=".CommandLaunch"
+            android:exported="false"
+            android:targetActivity=".DisplayActivity" />
+
+        <!--
+            Exported only so the Shizuku shell process can launch it: the shell can't start an
+            activity that isn't. On either screen it closes itself at once unless it carries the
+            token this app's service gave that launch, and the main screen only ever sees it
+            on its way to the back screen.
+        -->
+        <activity
+            android:name=".rear.RearHostActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity="de.rearstudio.rear"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
+            <!--
+                HyperOS reads this as an integer: 1 allows launching straight onto the rear
+                display, but only while the phone is unlocked (when locked it only allows its
+                own built-in list of apps). KeeperService falls back to launch-and-move then.
+            -->
+            <meta-data
+                android:name="miui.rear.policy"
+                android:value="1" />
+        </activity>
+
+        <service
+            android:name=".core.KeeperService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows a user-chosen image, a clock and a charging animation on the phone's rear display, and moves the app in use there and back when the user asks" />
+        </service>
+
+        <!--
+            Notifications on the back screen. Reads new notifications only once you allow
+            Notification access (one tap through Shizuku, or in Settings), and only while that
+            section is on. Nothing is stored or sent anywhere. It asks for notifications that
+            alert or are conversations, so by default silent and ongoing ones don't reach it.
+            That's only a default, which Settings can change; the app leaves them out anyway.
+        -->
+        <service
+            android:name=".notifications.RearNotificationListener"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.notification.default_filter_types"
+                android:value="conversations|alerting" />
+        </service>
+
+        <!-- Schedule alarms; the system broadcasts below mean the alarm must be set again. -->
+        <receiver
+            android:name=".ScheduleReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- The back screen clock's per-minute alarm. -->
+        <receiver
+            android:name=".wallpaper.ClockAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Home screen on/off widget. -->
+        <receiver
+            android:name=".ToggleWidget"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/toggle_widget_info" />
+        </receiver>
+
+        <!-- Quick Settings on/off tile. -->
+        <service
+            android:name=".ToggleTile"
+            android:exported="true"
+            android:icon="@drawable/ic_tile"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <!-- Quick Settings tile for Quick Switch: the app in use to the back screen and back. -->
+        <service
+            android:name=".mirror.QuickSwitchTile"
+            android:exported="true"
+            android:icon="@drawable/ic_swap"
+            android:label="@string/mirror_switch"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <!-- Lets the Shizuku app hand this app its connection. -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
     </application>
 </manifest>
