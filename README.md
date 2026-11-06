@@ -24,3 +24,8 @@ GitHub Actions → Debug APK → successful run → AHM3T45-STUDIO-debug-apk con
 
 ## Provenance
 See LICENSE and THIRD_PARTY_NOTICES.md. Copyright/credit for Mi Back Screen remains included. Personal development build; TheSportsDB app-store publication requires the provider subscription. No app-store release is configured.
+
+## Master V4 work in progress
+
+See [analysis, feasibility matrix and architecture](docs/MASTER_V4_ANALYSIS.md) and [first increment](docs/V4_STEP_01.md).
+The first increment removes viewport constraints from widget placement and sizing. Exact percentage inputs accept negative/offscreen positions and sizes above 100%; Select widget recovers selection of offscreen elements. The renderer still clips the physical output, and geometry calibration remains pending. This is not the completed V4 feature set.

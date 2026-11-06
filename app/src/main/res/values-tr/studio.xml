@@ -138,4 +138,7 @@
   <string name="s_favorite_driver" formatted="false">Favori sürücü</string>
   <string name="s_accent" formatted="false">Vurgu rengi</string>
   <string name="s_retrieved" formatted="false">Alınma zamanı</string>
+    <string name="s_select_widget" formatted="false">Widget seç</string>
+    <string name="s_coordinate_hint" formatted="false">100%, bir ekran genişliği veya yüksekliğidir. Konumlar negatif veya 100% üzerinde olabilir.</string>
+    <string name="s_coordinate_invalid" formatted="false">Sonlu bir sayı girin. Genişlik ve yükseklik en az 0,1% olmalıdır.</string>
 </resources>

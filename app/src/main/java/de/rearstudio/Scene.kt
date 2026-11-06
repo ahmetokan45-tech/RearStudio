@@ -6,7 +6,8 @@ import org.json.JSONObject
 import java.util.UUID
 
 data class StudioWidget(val id: String = UUID.randomUUID().toString(), var kind: String, var x: Float = .35f, var y: Float = .1f, var w: Float = .58f, var h: Float = .32f, var color: Int = 0xffefeff3.toInt(), var opacity: Int = 100, var style: String = "digital", var enabled: Boolean = true) {
-    fun constrain() { w=w.finite(.58f).coerceIn(.15f,1f);h=h.finite(.32f).coerceIn(.12f,1f);x=x.finite(.35f).coerceIn(0f,1-w);y=y.finite(.1f).coerceIn(0f,1-h);opacity=opacity.coerceIn(0,100) }
+    /** Validate values only: the viewport and camera guides never constrain placement. */
+    fun constrain() { w=w.finite(.58f).coerceAtLeast(.001f);h=h.finite(.32f).coerceAtLeast(.001f);x=x.finite(.35f);y=y.finite(.1f);opacity=opacity.coerceIn(0,100) }
     fun json()=JSONObject().put("id",id).put("kind",kind).put("x",x).put("y",y).put("w",w).put("h",h).put("color",color).put("opacity",opacity).put("style",style).put("enabled",enabled)
     companion object { fun read(o:JSONObject)=StudioWidget(o.optString("id",UUID.randomUUID().toString()),o.getString("kind"),o.optDouble("x",.35).toFloat(),o.optDouble("y",.1).toFloat(),o.optDouble("w",.58).toFloat(),o.optDouble("h",.32).toFloat(),o.optInt("color",0xffefeff3.toInt()),o.optInt("opacity",100),o.optString("style","digital"),o.optBoolean("enabled",true)).apply{constrain()} }
 }

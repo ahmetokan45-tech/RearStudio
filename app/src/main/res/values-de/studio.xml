@@ -138,4 +138,7 @@
   <string name="s_favorite_driver" formatted="false">Lieblingsfahrer</string>
   <string name="s_accent" formatted="false">Akzentfarbe</string>
   <string name="s_retrieved" formatted="false">Abgerufen</string>
+    <string name="s_select_widget" formatted="false">Widget auswählen</string>
+    <string name="s_coordinate_hint" formatted="false">100% entspricht einer Displaybreite oder -höhe. Positionen dürfen negativ oder größer als 100% sein.</string>
+    <string name="s_coordinate_invalid" formatted="false">Gültige Zahl eingeben. Breite und Höhe müssen mindestens 0,1% betragen.</string>
 </resources>

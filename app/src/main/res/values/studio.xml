@@ -138,4 +138,7 @@
   <string name="s_favorite_driver" formatted="false">Favorite driver</string>
   <string name="s_accent" formatted="false">Accent colour</string>
   <string name="s_retrieved" formatted="false">Retrieved</string>
+    <string name="s_select_widget" formatted="false">Select widget</string>
+    <string name="s_coordinate_hint" formatted="false">100% equals one display width or height. Positions may be negative or beyond 100%.</string>
+    <string name="s_coordinate_invalid" formatted="false">Enter a finite number. Width and height must be at least 0.1%.</string>
 </resources>
