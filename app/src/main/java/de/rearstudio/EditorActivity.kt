@@ -16,10 +16,10 @@ import de.rearstudio.core.KeeperService
 import de.rearstudio.core.RearCommands
 import java.io.File
 
-class RearPreview(c:android.content.Context):FrameLayout(c){override fun onMeasure(w:Int,h:Int){val width=MeasureSpec.getSize(w);super.onMeasure(w,MeasureSpec.makeMeasureSpec((width*596f/976).toInt(),MeasureSpec.EXACTLY))}}
+class RearPreview(c:android.content.Context):FrameLayout(c){var geometry=DisplayGeometry.detect(c);override fun onMeasure(w:Int,h:Int){val width=MeasureSpec.getSize(w);super.onMeasure(w,MeasureSpec.makeMeasureSpec((width*geometry.height/geometry.width).toInt(),MeasureSpec.EXACTLY))}}
 
 class EditorActivity:AppCompatActivity(){
-    private lateinit var scene:StudioScene;private var profile="normal";private lateinit var canvas:StudioCanvas;private lateinit var panel:LinearLayout;private lateinit var body:LinearLayout;private lateinit var tabs:LinearLayout
+    private lateinit var scene:StudioScene;private var profile="normal";private lateinit var canvas:StudioCanvas;private lateinit var panel:LinearLayout;private lateinit var body:LinearLayout;private lateinit var tabs:LinearLayout;private lateinit var rearPreview:RearPreview
     private var backdrop:de.rearstudio.wallpaper.WallpaperLayer?=null;private var selected:String?=null;private val history=java.util.ArrayDeque<String>();private var live=false;private var dirty=false;private val handler=Handler(Looper.getMainLooper())
     private val pulse=object:Runnable{override fun run(){if(live)preview();handler.postDelayed(this,3000)}}
     private val photo=registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()){uri->
@@ -37,7 +37,7 @@ class EditorActivity:AppCompatActivity(){
         val scroll=ScrollView(this);root.addView(scroll,LinearLayout.LayoutParams(-1,0,1f));body=StudioUi.column(this).apply{setPadding(StudioUi.dp(this@EditorActivity,18),0,StudioUi.dp(this@EditorActivity,18),StudioUi.dp(this@EditorActivity,24))};scroll.addView(body)
         StudioUi.title(this,body,"your_design");tabs=LinearLayout(this);body.addView(tabs)
         listOf("normal","charging","notification").forEach{key->val holder=StudioUi.column(this);tabs.addView(holder,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,holder,t(key)){profile=key;selected=scene.profile(key).widgets.firstOrNull()?.id;canvas.forcedProfile=profile;canvas.selected=selected;controls();changed(false)}}
-        val preview=RearPreview(this);body.addView(preview,LinearLayout.LayoutParams(-1,-2).apply{topMargin=StudioUi.dp(this@EditorActivity,18)})
+        val preview=RearPreview(this).apply{geometry=scene.geometry?:DisplayGeometry.detect(this@EditorActivity)};rearPreview=preview;body.addView(preview,LinearLayout.LayoutParams(-1,-2).apply{topMargin=StudioUi.dp(this@EditorActivity,18)})
         val target=de.rearstudio.core.BackScreen.findRearDisplay(this)?:runCatching{display}.getOrNull()
         if(target!=null){backdrop=de.rearstudio.wallpaper.WallpaperLayer(this,target).apply{moving=true};preview.addView(backdrop,FrameLayout.LayoutParams(-1,-1));backdrop?.resume()}
         canvas=StudioCanvas(this).apply{editing=true;cameraGuides=true;scene=this@EditorActivity.scene;forcedProfile=profile;selected=this@EditorActivity.selected;contentDescription=t("drag_hint")};preview.addView(canvas,FrameLayout.LayoutParams(-1,-1))
@@ -45,11 +45,15 @@ class EditorActivity:AppCompatActivity(){
         body.addView(StudioUi.label(this,t("drag_hint"),12f,true).apply{setPadding(0,StudioUi.dp(this@EditorActivity,10),0,0)})
         val actions=LinearLayout(this);body.addView(actions);listOf("background","add_widget").forEachIndexed{i,k->val holder=StudioUi.column(this);actions.addView(holder,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,holder,t(k)){if(i==0)background()else addWidget()}}
         val liveSwitch=Switch(this).apply{text=t("live_rear");setTextColor(StudioUi.TEXT);isChecked=live;setOnCheckedChangeListener{_,on->if(on&&!RearCommands.isReady()){isChecked=false;toast("need_shizuku")}else{live=on;if(on){KeeperService.setWallpaper(this@EditorActivity,true);preview()}else clearPreview()}}};body.addView(liveSwitch)
+        StudioUi.button(this,body,t("geometry_title")){GeometryDialog.show(this,canvas.geometry(),
+            onApply={geometry->remember();scene.geometry=geometry;changed();controls()},
+            onReset={remember();scene.geometry=null;canvas.refresh();changed();controls()})}
+        body.addView(Switch(this).apply{text=t("camera_guides");setTextColor(StudioUi.TEXT);isChecked=canvas.cameraGuides;setOnCheckedChangeListener{_,value->canvas.cameraGuides=value;canvas.invalidate()}})
         panel=StudioUi.column(this);body.addView(panel);controls();handler.post(pulse)
         onBackPressedDispatcher.addCallback(this,object:androidx.activity.OnBackPressedCallback(true){override fun handleOnBackPressed(){leave()}})
     }
     private fun remember(){history.addLast(scene.json());while(history.size>25)history.removeFirst()}
-    private fun changed(mark:Boolean=true){if(mark)dirty=true;canvas.scene=scene;canvas.selected=selected;canvas.invalidate();if(live)preview()}
+    private fun changed(mark:Boolean=true){if(mark)dirty=true;canvas.scene=scene;canvas.selected=selected;rearPreview.geometry=canvas.geometry();rearPreview.requestLayout();canvas.invalidate();if(live)preview()}
     private fun preview(){de.rearstudio.rear.RearHostActivity.previewLit(true);getSharedPreferences("studio",0).edit().putString("preview",scene.json()).putString("preview_profile",profile).putLong("preview_time",System.currentTimeMillis()).apply()}
     private fun clearPreview(){de.rearstudio.rear.RearHostActivity.previewLit(false);getSharedPreferences("studio",0).edit().remove("preview").remove("preview_profile").apply()}
     private fun leave(){if(!dirty){finish();return};MaterialAlertDialogBuilder(this).setTitle(t("discard_title")).setNegativeButton(t("cancel"),null).setPositiveButton(t("discard")){_,_->finish()}.show()}

@@ -141,4 +141,19 @@
     <string name="s_select_widget" formatted="false">Select widget</string>
     <string name="s_coordinate_hint" formatted="false">100% equals one display width or height. Positions may be negative or beyond 100%.</string>
     <string name="s_coordinate_invalid" formatted="false">Enter a finite number. Width and height must be at least 0.1%.</string>
+    <string name="s_geometry_title">Display calibration</string>
+    <string name="s_geometry_hint">Values use natural display pixels. Corner defaults come from Android when available. Camera circles are only manual guides; suggested values are not measurements. They never block widget placement. Changes are saved with your design.</string>
+    <string name="s_geometry_device">Android display values</string>
+    <string name="s_geometry_estimated">Estimated fallback: verify on device</string>
+    <string name="s_geometry_custom">Manual calibration: verify on device</string>
+    <string name="s_corner_tl">Top left radius</string>
+    <string name="s_corner_tr">Top right radius</string>
+    <string name="s_corner_br">Bottom right radius</string>
+    <string name="s_corner_bl">Bottom left radius</string>
+    <string name="s_calibrate_lenses">Use manually calibrated camera circles</string>
+    <string name="s_camera_lens">Camera</string>
+    <string name="s_radius">Radius</string>
+    <string name="s_camera_guides">Show camera guides</string>
+    <string name="s_geometry_reset">Use device values</string>
+    <string name="s_geometry_invalid">Check values: corner radius from 0 to half the shorter display side; camera centres inside the display; radius positive.</string>
 </resources>

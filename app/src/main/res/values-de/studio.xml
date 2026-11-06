@@ -141,4 +141,19 @@
     <string name="s_select_widget" formatted="false">Widget auswählen</string>
     <string name="s_coordinate_hint" formatted="false">100% entspricht einer Displaybreite oder -höhe. Positionen dürfen negativ oder größer als 100% sein.</string>
     <string name="s_coordinate_invalid" formatted="false">Gültige Zahl eingeben. Breite und Höhe müssen mindestens 0,1% betragen.</string>
+    <string name="s_geometry_title">Display kalibrieren</string>
+    <string name="s_geometry_hint">Werte in Pixeln der natürlichen Displayausrichtung. Rundungen stammen, soweit verfügbar, von Android. Kamerakreise sind nur manuelle Hilfslinien; Vorschlagswerte sind keine Messung. Sie sperren keine Widgetpositionen. Änderungen werden mit dem Design gespeichert.</string>
+    <string name="s_geometry_device">Android-Displaywerte</string>
+    <string name="s_geometry_estimated">Geschätzte Ersatzwerte: am Gerät prüfen</string>
+    <string name="s_geometry_custom">Manuelle Kalibrierung: am Gerät prüfen</string>
+    <string name="s_corner_tl">Radius oben links</string>
+    <string name="s_corner_tr">Radius oben rechts</string>
+    <string name="s_corner_br">Radius unten rechts</string>
+    <string name="s_corner_bl">Radius unten links</string>
+    <string name="s_calibrate_lenses">Manuell kalibrierte Kamerakreise verwenden</string>
+    <string name="s_camera_lens">Kamera</string>
+    <string name="s_radius">Radius</string>
+    <string name="s_camera_guides">Kamerahilfslinien anzeigen</string>
+    <string name="s_geometry_reset">Gerätewerte nutzen</string>
+    <string name="s_geometry_invalid">Werte prüfen: Eckenradius von 0 bis zur halben kürzeren Displayseite; Kameramittelpunkte im Display; Radius positiv.</string>
 </resources>

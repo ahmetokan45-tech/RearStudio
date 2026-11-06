@@ -22,9 +22,9 @@ data class StudioProfile(var enabled:Boolean=true,var background:String="gradien
     } }
 }
 
-data class StudioScene(var accent:Int=0xffe6bd77.toInt(),val profiles:MutableMap<String,StudioProfile> = mutableMapOf()) {
+data class StudioScene(var accent:Int=0xffe6bd77.toInt(),val profiles:MutableMap<String,StudioProfile> = mutableMapOf(),var geometry:DisplayGeometry?=null) {
     fun profile(name:String)=profiles.getOrPut(name){StudioProfile()}
-    fun json()=JSONObject().put("version",1).put("accent",accent).put("profiles",JSONObject().apply{profiles.forEach{(k,v)->put(k,v.json())}}).toString()
+    fun json()=JSONObject().put("version",1).put("geometry",geometry?.json()).put("accent",accent).put("profiles",JSONObject().apply{profiles.forEach{(k,v)->put(k,v.json())}}).toString()
     fun copy()=parse(json())
     companion object {
         fun defaults()=StudioScene().apply {
@@ -32,7 +32,7 @@ data class StudioScene(var accent:Int=0xffe6bd77.toInt(),val profiles:MutableMap
             profiles["charging"]=StudioProfile(widgets=mutableListOf(StudioWidget(kind="clock"),StudioWidget(kind="battery",y=.6f,w=.4f,h=.2f,color=0xffa4c6bc.toInt())))
             profiles["notification"]=StudioProfile(widgets=mutableListOf(StudioWidget(kind="clock"),StudioWidget(kind="notification",x=.32f,y=.52f,w=.64f,h=.32f,color=accent)))
         }
-        fun parse(raw:String):StudioScene {val o=JSONObject(raw);require(o.getInt("version")==1);val p=o.getJSONObject("profiles");return StudioScene(o.optInt("accent",0xffe6bd77.toInt())).apply{for(name in listOf("normal","charging","notification"))profiles[name]=StudioProfile.read(p.getJSONObject(name))}}
+        fun parse(raw:String):StudioScene {val o=JSONObject(raw);require(o.getInt("version")==1);val p=o.getJSONObject("profiles");return StudioScene(o.optInt("accent",0xffe6bd77.toInt())).apply{geometry=o.optJSONObject("geometry")?.let{runCatching{DisplayGeometry.read(it)}.getOrNull()};for(name in listOf("normal","charging","notification"))profiles[name]=StudioProfile.read(p.getJSONObject(name))}}
         fun load(context:Context,preview:Boolean=false):StudioScene {val p=context.getSharedPreferences("studio",0);val draft=if(preview&&System.currentTimeMillis()-p.getLong("preview_time",0)<15_000)p.getString("preview",null) else null;return try{parse(draft?:p.getString("scene",null)?:return defaults())}catch(_:Exception){defaults()}}
         fun save(context:Context,scene:StudioScene){context.getSharedPreferences("studio",0).edit().putString("scene",scene.json()).putBoolean("scene_enabled",true).apply()}
     }

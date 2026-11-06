@@ -141,4 +141,19 @@
     <string name="s_select_widget" formatted="false">Widget seç</string>
     <string name="s_coordinate_hint" formatted="false">100%, bir ekran genişliği veya yüksekliğidir. Konumlar negatif veya 100% üzerinde olabilir.</string>
     <string name="s_coordinate_invalid" formatted="false">Sonlu bir sayı girin. Genişlik ve yükseklik en az 0,1% olmalıdır.</string>
+    <string name="s_geometry_title">Ekranı kalibre et</string>
+    <string name="s_geometry_hint">Değerler doğal ekran yönünde piksel cinsindendir. Köşe değerleri varsa Android üzerinden alınır. Kamera daireleri yalnızca manuel kılavuzlardır; önerilen değerler ölçüm değildir. Widget konumlarını engellemezler. Değişiklikler tasarımla kaydedilir.</string>
+    <string name="s_geometry_device">Android ekran değerleri</string>
+    <string name="s_geometry_estimated">Tahmini değerler: cihazda doğrulayın</string>
+    <string name="s_geometry_custom">Manuel kalibrasyon: cihazda doğrulayın</string>
+    <string name="s_corner_tl">Sol üst yarıçap</string>
+    <string name="s_corner_tr">Sağ üst yarıçap</string>
+    <string name="s_corner_br">Sağ alt yarıçap</string>
+    <string name="s_corner_bl">Sol alt yarıçap</string>
+    <string name="s_calibrate_lenses">Manuel kamera dairelerini kullan</string>
+    <string name="s_camera_lens">Kamera</string>
+    <string name="s_radius">Yarıçap</string>
+    <string name="s_camera_guides">Kamera kılavuzlarını göster</string>
+    <string name="s_geometry_reset">Cihaz değerlerini kullan</string>
+    <string name="s_geometry_invalid">Değerleri kontrol edin: köşe yarıçapı kısa kenarın yarısını geçmemeli; kamera merkezleri ekranda, yarıçap pozitif olmalıdır.</string>
 </resources>

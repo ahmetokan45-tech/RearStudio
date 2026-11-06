@@ -26,6 +26,8 @@ class StudioCanvas(c:Context):View(c){
     var onSelect:((StudioWidget?)->Unit)?=null;var onBeforeChange:(()->Unit)?=null;var onChanged:(()->Unit)?=null;var onDelete:((String)->Unit)?=null
     var onFrame:(()->Unit)?=null
     var cameraGuides=false;var demoLevel:Int?=null;var animateUntil=0L
+    private var detectedGeometry=DisplayGeometry.detect(c)
+    fun geometry()=scene.geometry?:detectedGeometry
     private val p=Paint(Paint.ANTI_ALIAS_FLAG);private val textPaint=TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val handler=Handler(Looper.getMainLooper());private var battery=82;private var charging=false;private var pluggedAt=0L
     private var drag:String?=null;private var resize=false;private var dx=0f;private var dy=0f;private var oldX=0f;private var oldY=0f;private var oldW=0f;private var oldH=0f;private var moved=false
@@ -35,7 +37,7 @@ class StudioCanvas(c:Context):View(c){
     fun profileKey():String {forcedProfile?.let{return it};val sp=context.getSharedPreferences("studio",0);if(sp.contains("preview")&&System.currentTimeMillis()-sp.getLong("preview_time",0)<15_000)sp.getString("preview_profile",null)?.let{return it};val now=System.currentTimeMillis();val note=RearNotificationListener.recent().firstOrNull();val np=scene.profile("notification");if(note!=null&&np.enabled&&np.popup&&now>=note.postedAt&&(np.duration==0||now-note.postedAt<=np.duration*1000L))return "notification";return if(charging&&scene.profile("charging").enabled&&(scene.profile("charging").duration==0||now-pluggedAt<scene.profile("charging").duration*1000L))"charging" else "normal"}
     fun profile()=scene.profile(profileKey())
     private fun shownProfile()=if(profileKey()=="charging"&&profile().reuseNormal)scene.profile("normal") else profile()
-    fun refresh(){update()}
+    fun refresh(){detectedGeometry=DisplayGeometry.detect(context);update()}
     private fun update(){if(forcedProfile==null)scene=StudioScene.load(context,true)
         val b=context.registerReceiver(null,IntentFilter(Intent.ACTION_BATTERY_CHANGED));val before=charging
         battery=((b?.getIntExtra(BatteryManager.EXTRA_LEVEL,0)?:0)*100/(b?.getIntExtra(BatteryManager.EXTRA_SCALE,100)?:100).coerceAtLeast(1)).coerceIn(0,100)
@@ -54,7 +56,7 @@ class StudioCanvas(c:Context):View(c){
     private fun text(canvas:Canvas,value:String,x:Float,y:Float,size:Float,color:Int,maxWidth:Float=width.toFloat(),font:String="sans-serif",align:Paint.Align=Paint.Align.LEFT){textPaint.apply{this.color=color;textSize=size;typeface=Typeface.create(font,Typeface.NORMAL);textAlign=align;shader=null};val v=android.text.TextUtils.ellipsize(value,textPaint,maxWidth.coerceAtLeast(1f),android.text.TextUtils.TruncateAt.END).toString();canvas.drawText(v,x,y,textPaint)}
     private fun round(canvas:Canvas,r:RectF,color:Int,radius:Float=height*.04f){p.apply{this.color=color;style=Paint.Style.FILL;shader=null;alpha=255};canvas.drawRoundRect(r,radius,radius,p)}
     override fun onDraw(canvas:Canvas){super.onDraw(canvas);if(width==0||height==0)return;p.reset();p.isAntiAlias=true;val profile=profile();val shown=shownProfile();val scale=height/596f;val base=height*.065f;val key=profileKey();val level=demoLevel?:battery
-        canvas.save();canvas.clipRoundRectCompat(RectF(0f,0f,width.toFloat(),height.toFloat()),height*.07f)
+        canvas.save();canvas.clipPath(geometry().outline(width.toFloat(),height.toFloat()))
         when(shown.background){"gallery"->{};"solid"->canvas.drawColor(shown.color);"photo"->{canvas.drawColor(0xff151720.toInt());image?.let{val iw=it.intrinsicWidth.coerceAtLeast(1);val ih=it.intrinsicHeight.coerceAtLeast(1);val f=max(width.toFloat()/iw,height.toFloat()/ih);it.setBounds(((width-iw*f)/2).toInt(),((height-ih*f)/2).toInt(),((width+iw*f)/2).toInt(),((height+ih*f)/2).toInt());it.draw(canvas)}};else->{p.shader=LinearGradient(0f,0f,width.toFloat(),height.toFloat(),shown.color,shown.color2,Shader.TileMode.CLAMP);canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),p);p.shader=null}}
         if(shown.dim>0)canvas.drawColor(Color.argb(shown.dim*255/100,0,0,0))
         if(!profile.enabled&&editing){text(canvas,StudioUi.text(context,"profile_off"),width*.4f,height*.5f,base,Color.WHITE,width*.5f)}
@@ -73,14 +75,14 @@ class StudioCanvas(c:Context):View(c){
         if(key=="charging"&&profile.chargeEnabled&&profile.enabled){val alpha=profile.chargeOpacity*255/100;val colors=when(profile.palette){"rainbow"->intArrayOf(0xffe87878.toInt(),0xffebc974.toInt(),0xff95c4a5.toInt(),0xff8faeef.toInt(),0xffbb97d5.toInt());"solid"->intArrayOf(profile.chargeColor,profile.chargeColor);else->intArrayOf(profile.chargeColor,profile.chargeColor2)};p.shader=LinearGradient(0f,0f,width.toFloat(),height.toFloat(),colors,null,Shader.TileMode.CLAMP);p.alpha=alpha;p.strokeWidth=profile.thickness*2*scale;p.strokeCap=Paint.Cap.ROUND
             val energy=shown.widgets.firstOrNull{it.kind=="battery"};val rr=energy?.let(::rect)?:RectF(width*.37f,height*.55f,width*.92f,height*.83f)
             if(profile.glow)p.setShadowLayer(profile.thickness*scale,0f,0f,profile.chargeColor)
-            when(profile.chargeStyle){"edge"->{p.style=Paint.Style.STROKE;val path=Path().apply{addRoundRect(RectF(p.strokeWidth,p.strokeWidth,width-p.strokeWidth,height-p.strokeWidth),height*.08f,height*.08f,Path.Direction.CW)};val measure=PathMeasure(path,false);val part=Path();measure.getSegment(0f,measure.length*level/100f,part,true);canvas.drawPath(part,p)};"ring"->{p.style=Paint.Style.STROKE;val radius=min(rr.width(),rr.height())*.42f;canvas.drawArc(RectF(rr.centerX()-radius,rr.centerY()-radius,rr.centerX()+radius,rr.centerY()+radius),-90f,360f*level/100f,false,p);if(profile.percentage)text(canvas,"$level%",rr.centerX(),rr.centerY()+base*.18f,base*.6f,profile.chargeColor,rr.width(),align=Paint.Align.CENTER)};"bar"->{p.style=Paint.Style.FILL;canvas.drawRoundRect(RectF(rr.left,rr.centerY(),rr.left+rr.width()*level/100f,rr.centerY()+p.strokeWidth*1.5f),p.strokeWidth,p.strokeWidth,p)};else->{p.style=Paint.Style.FILL;text(canvas,"ϟ ${if(profile.percentage)"$level%" else ""}",rr.left,rr.centerY()+base*.2f,base*.8f,profile.chargeColor,rr.width())}}
+            when(profile.chargeStyle){"edge"->{p.style=Paint.Style.STROKE;val path=geometry().outline(width.toFloat(),height.toFloat(),p.strokeWidth/2f);val measure=PathMeasure(path,false);val part=Path();measure.getSegment(0f,measure.length*level/100f,part,true);canvas.drawPath(part,p)};"ring"->{p.style=Paint.Style.STROKE;val radius=min(rr.width(),rr.height())*.42f;canvas.drawArc(RectF(rr.centerX()-radius,rr.centerY()-radius,rr.centerX()+radius,rr.centerY()+radius),-90f,360f*level/100f,false,p);if(profile.percentage)text(canvas,"$level%",rr.centerX(),rr.centerY()+base*.18f,base*.6f,profile.chargeColor,rr.width(),align=Paint.Align.CENTER)};"bar"->{p.style=Paint.Style.FILL;canvas.drawRoundRect(RectF(rr.left,rr.centerY(),rr.left+rr.width()*level/100f,rr.centerY()+p.strokeWidth*1.5f),p.strokeWidth,p.strokeWidth,p)};else->{p.style=Paint.Style.FILL;text(canvas,"ϟ ${if(profile.percentage)"$level%" else ""}",rr.left,rr.centerY()+base*.2f,base*.8f,profile.chargeColor,rr.width())}}
             p.clearShadowLayer();p.shader=null;p.alpha=255;p.style=Paint.Style.FILL
             if(animateUntil>System.currentTimeMillis()&&profile.animation){p.color=Color.argb(((sin(System.currentTimeMillis()/180.0)+1)*18).toInt(),255,255,255);canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),p);postInvalidateOnAnimation()}
         }
         if(editing&&key=="charging"&&profile.chargeEnabled&&profile.chargeStyle=="edge"){
             val x=width-height*.045f;val y=height*.045f;p.shader=null;p.color=scene.accent;p.style=Paint.Style.FILL;canvas.drawCircle(x,y,height*.04f,p);text(canvas,"×",x,y+height*.02f,height*.07f,StudioUi.BG,height*.1f,align=Paint.Align.CENTER)
         }
-        if(cameraGuides){p.shader=null;p.color=0x55777788;p.style=Paint.Style.STROKE;p.strokeWidth=1f;val radius=width*.075f;for(y in listOf(height*.27f,height*.72f)){canvas.drawCircle(width*.15f,y,radius,p)};p.style=Paint.Style.FILL}
+        if(cameraGuides){p.shader=null;p.color=0x55777788;p.style=Paint.Style.STROKE;p.strokeWidth=1f;val g=geometry();for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.drawOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),p)};p.style=Paint.Style.FILL}
         canvas.restore()
     }
     override fun onTouchEvent(event:MotionEvent):Boolean {val ws=shownProfile().widgets;val x=event.x;val y=event.y
