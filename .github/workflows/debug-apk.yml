@@ -23,10 +23,10 @@ jobs:
       - name: Build, unit tests and lint
         run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug
       - name: Name APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AHM3T45-STUDIO-0.9-debug.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AHM3T45-STUDIO-0.11-battery-v1-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: AHM3T45-STUDIO-debug-apk
-          path: app/build/outputs/apk/debug/AHM3T45-STUDIO-0.9-debug.apk
+          path: app/build/outputs/apk/debug/AHM3T45-STUDIO-0.11-battery-v1-debug.apk
           if-no-files-found: error
           retention-days: 14
