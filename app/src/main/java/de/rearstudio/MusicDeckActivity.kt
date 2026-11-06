@@ -3,6 +3,9 @@ package de.rearstudio
 import android.content.Context
 import android.graphics.*
 import android.media.MediaPlayer
+import android.media.AudioManager
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
 import android.media.PlaybackParams
 import android.os.Bundle
 import android.os.Handler
@@ -18,6 +21,10 @@ import kotlin.math.atan2
 class MusicDeckActivity:AppCompatActivity(){
     private data class Deck(var player:MediaPlayer?=null,var ready:Boolean=false,var wasPlaying:Boolean=false,var speed:Float=1f,var title:String="",var error:String="")
     private val decks=listOf(Deck(),Deck())
+    private val audio by lazy{getSystemService(AudioManager::class.java)}
+    private val focus by lazy{AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()).setOnAudioFocusChangeListener{change->if(change<=AudioManager.AUDIOFOCUS_LOSS_TRANSIENT){pauseLocal()}}.build()}
+    private fun pauseLocal(){decks.forEach{it.wasPlaying=false;if(it.ready)try{it.player?.pause()}catch(_:RuntimeException){}}}
+    private fun focusGranted():Boolean {val granted=audio.requestAudioFocus(focus)==AudioManager.AUDIOFOCUS_REQUEST_GRANTED;if(!granted)Toast.makeText(this,w("Audio ist momentan nicht verfügbar.","Audio is currently unavailable.","Ses şu anda kullanılamıyor."),Toast.LENGTH_SHORT).show();return granted}
     private val handler=Handler(Looper.getMainLooper())
     private var choosing=0;private var crossfade=.5f;private var local=false
     private lateinit var body:LinearLayout
@@ -47,13 +54,13 @@ class MusicDeckActivity:AppCompatActivity(){
         record.onGrab={if(d.ready){d.wasPlaying=d.player?.isPlaying==true;d.player?.pause()}}
         record.onSeek={delta->if(d.ready)try{d.player?.let{p->p.seekTo((p.currentPosition+delta).coerceIn(0,p.duration))}}catch(_:RuntimeException){}}
         record.onRelease={if(d.ready&&d.wasPlaying)try{d.player?.start()}catch(_:RuntimeException){}}
-        val row=LinearLayout(this);box.addView(row);val select=StudioUi.column(this);row.addView(select,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,select,w("Datei wählen","Choose file","Dosya seç")){choosing=index;picker.launch(arrayOf("audio/*"))};val play=StudioUi.column(this);row.addView(play,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,play,"▶ / Ⅱ"){if(d.ready)try{d.player?.let{if(it.isPlaying)it.pause()else{it.playbackParams=PlaybackParams().setSpeed(d.speed).setPitch(1f);it.start()}}}catch(_:RuntimeException){d.error=w("Wiedergabe nicht möglich.","Playback unavailable.","Oynatma kullanılamıyor.")}}
+        val row=LinearLayout(this);box.addView(row);val select=StudioUi.column(this);row.addView(select,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,select,w("Datei wählen","Choose file","Dosya seç")){choosing=index;picker.launch(arrayOf("audio/*"))};val play=StudioUi.column(this);row.addView(play,LinearLayout.LayoutParams(0,-2,1f));StudioUi.button(this,play,"▶ / Ⅱ"){if(d.ready)try{d.player?.let{if(it.isPlaying)it.pause()else if(focusGranted()){it.playbackParams=PlaybackParams().setSpeed(d.speed).setPitch(1f);it.start()}}}catch(_:RuntimeException){d.error=w("Wiedergabe nicht möglich.","Playback unavailable.","Oynatma kullanılamıyor.")}}
         val speed=StudioUi.label(this,"Tempo · ${(d.speed*100).toInt()} %",12f,true);box.addView(speed);box.addView(SeekBar(this).apply{max=60;progress=((d.speed-.7f)*100).toInt();setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener{override fun onStartTrackingTouch(s:SeekBar?){};override fun onStopTrackingTouch(s:SeekBar?){};override fun onProgressChanged(s:SeekBar?,v:Int,user:Boolean){if(user){d.speed=.7f+v/100f;speed.text="Tempo · ${(d.speed*100).toInt()} %";if(d.ready)try{val playing=d.player?.isPlaying==true;d.player?.playbackParams=PlaybackParams().setSpeed(d.speed).setPitch(1f);if(!playing)d.player?.pause()}catch(_:RuntimeException){}}}})})
     }
     private fun volumes(){decks.forEachIndexed{i,d->if(d.ready)try{val volume=if(i==0)1-crossfade else crossfade;d.player?.setVolume(volume,volume)}catch(_:RuntimeException){}}}
     private fun update(){if(!::body.isInitialized)return;if(local)decks.forEachIndexed{i,d->labels.getOrNull(i)?.text=d.error.ifBlank{d.title.ifBlank{w("Eigene Audiodatei auswählen","Choose your audio file","Kendi ses dosyanı seç")}};records.getOrNull(i)?.apply{playing=d.ready&&runCatching{d.player?.isPlaying==true}.getOrDefault(false);invalidate()}}else{val controller=MediaHub.selected(this);labels.firstOrNull()?.text=controller?.metadata?.getString(android.media.MediaMetadata.METADATA_KEY_TITLE)?:w("Starte Musik in deinem Player.","Start music in your player.","Müzik çalarında müzik başlat.");records.firstOrNull()?.apply{playing=MediaHub.isPlaybackActive(controller?.playbackState?.state);invalidate()}}}
     override fun onStart(){super.onStart();handler.post(pulse)}
-    override fun onStop(){handler.removeCallbacks(pulse);decks.forEach{if(it.ready)try{it.player?.pause()}catch(_:RuntimeException){}};super.onStop()}
+    override fun onStop(){handler.removeCallbacks(pulse);pauseLocal();if(local)audio.abandonAudioFocusRequest(focus);super.onStop()}
     override fun onDestroy(){decks.forEach{it.player?.release()};super.onDestroy()}
 }
 

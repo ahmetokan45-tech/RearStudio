@@ -47,3 +47,11 @@ Build/Test- und Installationsnachweise werden nach Ausführung ergänzt. Store-V
 - Automatische Ladeansicht auf dem Hauptdisplay außerhalb unserer sichtbaren App.
 - Garantierte Rückdisplay-Starts jeder Fremd-App oder Benachrichtigung; gesperrte Geräte werden nicht umgangen.
 - Lückenlose Live-Sportdaten, professionelle Scratch-Audioverarbeitung, Store-Veröffentlichung und perfekte Übersetzungs-/Hardwareabdeckung.
+
+## Bisherige Nachweise – 6. November 2026
+
+- 293 automatisierte Tests erfolgreich, keine Fehler/übersprungenen Tests. Android Lint: 0 Fehler, 253 Warnungen, 1 Hinweis.
+- Lokale APK als Update ohne Deinstallation erfolgreich auf Xiaomi 2509FPN0BC installiert; Android meldet versionCode 10 und 0.10-preview. Vorherige Einstellungen gesichert.
+- Neue native Sport-Hub-Ansicht mit veröffentlichtem F1-Podium auf dem Hauptdisplay gesehen. Das ist noch kein Nachweis für Live-Daten oder komplette Rückdisplay-/Audiofunktion.
+- GitHub-Build des ersten 0.10-Stands erfolgreich. Nachfolgende Korrekturen behandeln Audio-Fokus und veraltete Widget-Stilwerte.
+- Für weitere Bedienungstests wurde um alleinige Bedienung des Handys gebeten, weil der Nutzer selbst im Hub aktiv ist. Solange diese Rückmeldung fehlt, werden keine weiteren Eingaben auf dem Handy vorgenommen.
