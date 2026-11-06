@@ -449,7 +449,7 @@ class RearHostActivity : Activity() {
         // While the notification list is down, it takes every touch: to go back up, or stay.
         val layer = notifications
         if (layer != null && layer.isShadeOpen && !pulling) return layer.onShadeTouch(event)
-        gestures.onTouchEvent(event, window.decorView.width, window.decorView.height)
+        if (!de.rearstudio.StudioScene.load(this).unified) gestures.onTouchEvent(event, window.decorView.width, window.decorView.height)
         return super.dispatchTouchEvent(event)
     }
 
@@ -842,6 +842,8 @@ class RearHostActivity : Activity() {
         }
 
         /** Stay fully lit while unlocked started or ended ([de.rearstudio.core.DisplayKeeper]). */
+        fun openStudioShade() { val host=showingWallpaper()?:return; if(host.startShade())host.notifications?.openShade() }
+
         fun keepLit(on: Boolean) {
             keepLitWanted = on
             showingWallpaper()?.applyKeepLit()
