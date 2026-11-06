@@ -104,6 +104,9 @@ class BatteryFragment : Fragment(R.layout.fragment_battery), Refreshable {
             refresh()
         }
 
+        (playButton.parent as? android.widget.LinearLayout)?.let { parent ->
+            de.rearstudio.StudioUi.button(ctx,parent,"Battery Studio V1 – Profile & Editor") { startActivity(android.content.Intent(ctx,BatteryStudioActivity::class.java)) }
+        }
         setUpStyle()
         SwitchRow.bind(lightUpRow, lightUpSwitch)
         lightUpSwitch.isChecked = BatterySettings.lightUp(ctx)

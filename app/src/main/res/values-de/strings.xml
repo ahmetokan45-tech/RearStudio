@@ -267,10 +267,10 @@
   <string name="charging">Aufladen</string>
   <string name="charging_wireless">Kabelloses Laden</string>
   <string name="charged">Voll aufgeladen</string>
-  <string name="style_ring">Klingeln</string>
-  <string name="style_ring_summary">Das Level füllt einen Ring über dem abgedunkelten Hintergrundbild mit der Zahl in der Mitte</string>
+  <string name="style_ring">Ring</string>
+  <string name="style_ring_summary">Der Ladestand füllt einen Ring über dem abgedunkelten Hintergrundbild, mit der Prozentzahl in der Mitte</string>
   <string name="style_glow">Kantenglanz</string>
-  <string name="style_glow_summary">Ein Leuchten verläuft um den Rand herum bis zur Wasserwaage und bleibt dann schwach, während es aufgeladen wird</string>
+  <string name="style_glow_summary">Ein Leuchten folgt dem Displayrand bis zum aktuellen Ladestand und leuchtet beim Laden dezent weiter</string>
   <string name="style_minimal">Minimal</string>
   <string name="style_minimal_summary">Ein kleiner Riegel und die Wasserwaage bei der Uhr: darunter oder daneben, wo kein Platz ist</string>
   <string name="charging_colour">Farbe</string>

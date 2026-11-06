@@ -46,6 +46,7 @@ class ChargingMonitor(
     private val onSourceChanged: (ChargingStatus) -> Unit,
 ) {
     private val gate = ChargingGate()
+    private val fullGate = FullChargeGate()
 
     // What the last plug-in said, until it's been read again.
     private var plugged: ChargingStatus? = null
@@ -54,8 +55,19 @@ class ChargingMonitor(
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
+                Intent.ACTION_BATTERY_CHANGED -> {
+                    val status = ChargingStatus.of(intent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, 0),
+                        intent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, 100),
+                        intent.getIntExtra(android.os.BatteryManager.EXTRA_PLUGGED, 0))
+                    val connected = intent.getIntExtra(android.os.BatteryManager.EXTRA_PLUGGED, 0) != 0
+                    val full = fullGate.update(connected, status.full)
+                    if (BatterySettings.isEnabled(context) && connected) {
+                        onSourceChanged(status)
+                        if (full && BatterySettings.fullEvent(context)) onPlugged(status)
+                    }
+                }
                 Intent.ACTION_POWER_CONNECTED -> {
-                    if (!BatterySettings.isEnabled(context)) return
+                    if (!BatterySettings.isEnabled(context) || !BatterySettings.connectedEvent(context)) return
                     if (!gate.onPlugged(SystemClock.elapsedRealtime())) {
                         BackScreen.log("Plugged in again within moments; no animation")
                         onHeldBack()
@@ -89,6 +101,7 @@ class ChargingMonitor(
 
     fun start() {
         val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_BATTERY_CHANGED)
             addAction(Intent.ACTION_POWER_CONNECTED)
             addAction(Intent.ACTION_POWER_DISCONNECTED)
         }

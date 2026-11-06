@@ -57,7 +57,10 @@
         <activity android:name=".MainActivity" android:exported="true" android:theme="@style/Theme.BackScreen">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
         </activity>
+        <activity android:name=".battery.BatteryStudioActivity" android:exported="false" />
         <activity android:name=".EditorActivity" android:exported="false" />
+        <activity android:name=".SportsHubActivity" android:exported="false" android:taskAffinity="de.rearstudio.sport"><meta-data android:name="miui.rear.policy" android:value="1" /></activity>
+        <activity android:name=".MusicDeckActivity" android:exported="false" android:taskAffinity="de.rearstudio.music"><meta-data android:name="miui.rear.policy" android:value="1" /></activity>
         <activity android:name=".DisplayActivity" android:exported="false" />
         <service android:name=".MusicAccessService" android:label="AHM3T45 STUDIO Musikzugriff" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">
             <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>

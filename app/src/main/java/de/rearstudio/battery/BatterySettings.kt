@@ -18,6 +18,11 @@ enum class ChargingStyle(val label: Int, val summary: Int) {
 
 /** The Battery section's settings: a charging animation on the back screen. */
 object BatterySettings : FeatureSettings("battery") {
+    fun connectedEvent(context: Context) = prefs(context).getBoolean("event_connected", true)
+    fun fullEvent(context: Context) = prefs(context).getBoolean("event_full", true)
+    fun setEvents(context: Context, connected: Boolean, full: Boolean) {
+        prefs(context).edit().putBoolean("event_connected", connected).putBoolean("event_full", full).apply()
+    }
     private const val KEY_LIGHT_UP = "light_up"
     private const val KEY_OVER_XIAOMI = "over_xiaomi"
     private const val KEY_STYLE = "style"

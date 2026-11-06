@@ -282,7 +282,6 @@ class RearHostActivity : Activity() {
      * centred.
      */
     private fun addCharging(root: FrameLayout, display: Display) {
-        if (!popover && getSharedPreferences("studio",0).getBoolean("scene_enabled",true)) return
         val camera = BackScreen.cameraInsets(display)
         charging = ChargingLayer(this).apply {
             setPadding(camera.left, camera.top, camera.right, camera.bottom)
@@ -449,7 +448,7 @@ class RearHostActivity : Activity() {
         // While the notification list is down, it takes every touch: to go back up, or stay.
         val layer = notifications
         if (layer != null && layer.isShadeOpen && !pulling) return layer.onShadeTouch(event)
-        gestures.onTouchEvent(event, window.decorView.width, window.decorView.height)
+        if (!de.rearstudio.StudioScene.load(this).unified) gestures.onTouchEvent(event, window.decorView.width, window.decorView.height)
         return super.dispatchTouchEvent(event)
     }
 
@@ -679,8 +678,8 @@ class RearHostActivity : Activity() {
 
     /** Android said how it's charging only after the plug-in: the label follows, if it's showing or due. */
     private fun chargingSourceChanged(status: ChargingStatus) {
-        chargingDue?.let { chargingDue = it.copy(source = status.source) }
-        chargingPlaying?.let { chargingPlaying = it.copy(source = status.source) }
+        chargingDue?.let { chargingDue = status }
+        chargingPlaying?.let { chargingPlaying = status }
         if (chargingPlaying != null) charging?.relabel(status)
     }
 
@@ -842,6 +841,8 @@ class RearHostActivity : Activity() {
         }
 
         /** Stay fully lit while unlocked started or ended ([de.rearstudio.core.DisplayKeeper]). */
+        fun openStudioShade() { val host=showingWallpaper()?:return; if(host.startShade())host.notifications?.openShade() }
+
         fun keepLit(on: Boolean) {
             keepLitWanted = on
             showingWallpaper()?.applyKeepLit()
@@ -881,7 +882,7 @@ class RearHostActivity : Activity() {
 
         /** Wired or wireless became known only after the plug-in ([de.rearstudio.battery.ChargingMonitor]). */
         fun chargingSourceChanged(status: ChargingStatus) {
-            pendingCharging = pendingCharging?.copy(source = status.source)
+            if (pendingCharging != null) pendingCharging = status
             showing()?.chargingSourceChanged(status)
         }
 

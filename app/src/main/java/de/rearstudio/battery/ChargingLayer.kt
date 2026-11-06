@@ -285,7 +285,8 @@ class ChargingLayer @JvmOverloads constructor(
 
     /** Says "Charging" or "Wireless charging" as [status] does, carrying on as it is: Android can tell which only after the plug-in. */
     fun relabel(status: ChargingStatus) {
-        label = context.getString(status.label)
+        setStatus(status)
+        if (isPlaying) frame = frameAt(animator?.currentPlayTime ?: 0L)
         invalidate()
     }
 

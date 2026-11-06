@@ -18,6 +18,8 @@ object MediaHub {
     fun granted(c:Context)=allowed(c).isNotEmpty()
     fun controllers(c:Context):List<MediaController>{val access=allowed(c);if(access.isEmpty()){MusicAccessService.tokens.clear();return emptyList()};for(component in access){try{val list=c.getSystemService(MediaSessionManager::class.java).getActiveSessions(component);if(list.isNotEmpty())return list}catch(_:RuntimeException){}};return MusicAccessService.tokens.values.mapNotNull{try{MediaController(c,it)}catch(_:RuntimeException){null}}}
     fun selected(c:Context):MediaController? {val list=controllers(c);val favorite=c.getSharedPreferences("studio",0).getString("player","auto");val preferred=list.filter{favorite=="auto"||it.packageName==favorite};val candidates=preferred.ifEmpty{list};return candidates.firstOrNull{it.playbackState?.state==PlaybackState.STATE_PLAYING}?:candidates.firstOrNull()}
+    fun isPlaybackActive(state:Int?)=state in listOf(PlaybackState.STATE_PLAYING,PlaybackState.STATE_BUFFERING,PlaybackState.STATE_CONNECTING)
+    fun playing(c:Context)=selected(c)?.takeIf{isPlaybackActive(it.playbackState?.state)}
     fun settings(c:Context){val component=ComponentName(c,MusicAccessService::class.java);try{c.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS).putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME,component.flattenToString()))}catch(_:android.content.ActivityNotFoundException){c.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))}}
     fun rebind(c:Context){if(granted(c))try{NotificationListenerService.requestRebind(ComponentName(c,MusicAccessService::class.java))}catch(_:RuntimeException){}}
 }

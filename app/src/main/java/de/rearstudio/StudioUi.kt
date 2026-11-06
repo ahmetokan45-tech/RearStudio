@@ -15,7 +15,8 @@ object StudioUi {
     fun label(c:Context,value:String,size:Float=14f,muted:Boolean=false)=TextView(c).apply{text=value;textSize=size;setTextColor(if(muted)SUB else TEXT);setLineSpacing(dp(c,2).toFloat(),1f)}
     fun column(c:Context)=LinearLayout(c).apply{orientation=LinearLayout.VERTICAL}
     fun card(c:Context,parent:LinearLayout):LinearLayout=column(c).apply{background=shape(c,PANEL);setPadding(dp(c,18),dp(c,18),dp(c,18),dp(c,18));parent.addView(this,LinearLayout.LayoutParams(-1,-2).apply{topMargin=dp(c,14)})}
-    fun button(c:Context,parent:LinearLayout,title:String,primary:Boolean=false,action:()->Unit)=Button(c).apply{
+    fun button(c:Context,parent:LinearLayout,title:String,primary:Boolean=false,action:()->Unit)=com.google.android.material.button.MaterialButton(c).apply{
+        cornerRadius=dp(c,14);insetTop=0;insetBottom=0;letterSpacing=0f;setPadding(dp(c,12),dp(c,7),dp(c,12),dp(c,7));strokeWidth=if(primary)0 else dp(c,1);strokeColor=android.content.res.ColorStateList.valueOf(0xff353a46.toInt())
         text=title;isAllCaps=false;textSize=14f;minHeight=dp(c,48);minimumWidth=0;minWidth=0
         setTextColor(if(primary)BG else TEXT);backgroundTintList=android.content.res.ColorStateList.valueOf(if(primary)StudioScene.load(c).accent else 0xff282a34.toInt())
         parent.addView(this,LinearLayout.LayoutParams(-1,-2).apply{topMargin=dp(c,8)});setOnClickListener{action()}
