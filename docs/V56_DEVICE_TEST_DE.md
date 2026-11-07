@@ -1,6 +1,6 @@
 # V5.6: Gerätetest auf Xiaomi 17 Pro Max
 
-Status: **nicht durchgeführt**. Diese Checkliste gehört zur isolierten Test-App,
+Status: **App-Gerätetests nicht durchgeführt**. Die vom Nutzer bereitgestellte ADB-Ausgabe bestätigt lediglich die USB-Verbindung zum Xiaomi (`device`, Modell 2509FPN0BC). Diese Checkliste gehört zur isolierten Test-App,
 nicht zu einer Verkaufsfreigabe oder einer vollständigen V5.6-Abnahme.
 
 ## Vorbereitung
@@ -80,3 +80,24 @@ vergleichen. Keine Zuverlässigkeits- oder Verkaufsfreigabe ohne diese Messungen
 
 Offene Softwarefunktionen stehen in `V56_STATUS.md`; erfolgreiche Gerätetests dieses
 Zwischenstands schließen diese Entwicklungslücken nicht.
+
+## Neue Prüfungen für 0.12
+
+- Compose-Kacheln öffnen jeweils Editor, Designs, Elemente und Einstellungen.
+- Schriftfamilien in allen Widget-Typen, Uhrfarben und optionalen Sekunden prüfen.
+- Schrittberechtigung erlauben/ablehnen/widerrufen; echte Schritte, Neustart und
+  Datumswechsel prüfen. Angezeigt werden erfasste Schritte ab Trackingstart.
+- Wetterstandort setzen, ändern und deaktivieren; offline bleiben Zeitstempel und
+  gespeicherte Daten erkennbar. Koordinatenfreigabe erfolgt ausdrücklich im Dialog.
+- Wechsel-Widget: Anzeigedauern, manuelles Wischen und Konkurrenz zur Smart View.
+- Design als ZIP mit Bildern exportieren, importieren, Kalibrierung vergleichen;
+  beschädigte Dateien ablehnen. Aktives Design erst durch Speichern ändern.
+- Zehn Hintergrunddateien offline anzeigen; verwendete Bilder dürfen nicht löschbar sein.
+- Gruppen gemeinsam verschieben; gesperrte Widgets unverändert; Zweifinger-Skalierung
+  und Drehung sowie Undo/Redo prüfen.
+- App-spezifische Benachrichtigungsstile mit echten Nachrichten vergleichen.
+- Transparenz darf Musikcover nicht vollständig verdecken.
+- Lange drücken: Favoritenvorschau, Abbrechen, Bestätigen und Hintergrundmodus;
+  während Ausschalten darf der Wechselbildschirm nicht aktiv bleiben.
+- Licht-A/B-Vergleich separat pausieren/starten/zurücksetzen; Ein-/Ausblenden,
+  Helligkeit/Glow/Linienbreite und Kameraaussparungen kontrollieren.

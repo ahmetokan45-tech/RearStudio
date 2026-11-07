@@ -5,7 +5,7 @@ Baseline `studio-v4-geometry` and the original application ID remain unchanged.
 Debug builds use `de.rearstudio.v56dev`, label `AHM3T45 V5.6 Test`. Do not run both
 apps' rear-display services concurrently. No existing installation is uninstalled.
 
-## Additional implementation on 2026-11-07 (validation of latest commit pending)
+## Additional implementation on 2026-11-07 (automated validation passed)
 
 - Compose home action grid integrated with the existing native renderer/editor.
 - Portable ZIP design export/import with embedded private images; imported geometry
@@ -90,15 +90,14 @@ not redrawn, stretched, or substituted by the experimental circle renderer.
 
 ## Automated checks
 
-Local Gradle execution attempted; dependency download blocked (`Network is unreachable`).
-GitHub Actions is the build/test environment. Baseline commit `6c535bb` passed.
-First increment: 293 tests, 1 failure in geometry provenance copying; fixed.
-Second increment: 300 tests, 1 fixture failure after adding default Smart View content;
-fixed by explicitly clearing the default content before constructing the test fixture.
-Earlier verified run: **306 tests passed, 0 test failures; build passed; lint 0 errors,
-382 warnings and 1 hint; APK signature/manifest/archive/hash verified**.
-Exact commit and APK evidence: [V56_VALIDATION.md](V56_VALIDATION.md).
-No Android emulator or Xiaomi device tests have been performed in this environment.
+The final GitHub run for code `465418bf78345754a895bd8653fb09652589be20` passed
+**332 tests with no failures/errors/skips, assembleDebug, lintDebug (0 errors,
+490 warnings + 1 hint), APK signature/manifest validation and release publication**.
+The downloaded APK matches the CI SHA-256 and passes ZIP integrity checks.
+Native-rendered fixtures were visually reviewed, including the transparency correction.
+Exact evidence and download: [V56_VALIDATION.md](V56_VALIDATION.md).
+No emulator or target-device app test was performed here. The user's successful ADB
+listing confirms the Mac-to-phone connection, not hardware feature acceptance.
 
 ## Device gate
 
