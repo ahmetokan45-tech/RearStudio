@@ -24,7 +24,7 @@ data class StudioProfile(var enabled:Boolean=true,var background:String="gradien
 
 data class StudioScene(var accent:Int=0xffe6bd77.toInt(),val profiles:MutableMap<String,StudioProfile> = mutableMapOf(),var geometry:DisplayGeometry?=null,var navigation:JSONObject=JSONObject()) {
     fun profile(name:String)=profiles.getOrPut(name){
-        if(name in SmartViews.VIEWS) StudioProfile(widgets=mutableListOf(StudioWidget(kind=when(name){"smart_music"->"music";"smart_notifications"->"notification";else->"unavailable"},x=.35f,y=.18f,w=.59f,h=.65f))) else StudioProfile()
+        if(name in SmartViews.VIEWS) StudioProfile(widgets=mutableListOf(StudioWidget(kind=when(name){"smart_music"->"music";"smart_notifications"->"notification";"smart_activity"->"activity";"smart_weather"->"weather";else->"unavailable"},x=.35f,y=.18f,w=.59f,h=.65f))) else StudioProfile()
     }
     fun json()=JSONObject().put("version",1).put("geometry",geometry?.json()).put("navigation",navigation).put("accent",accent).put("profiles",JSONObject().apply{profiles.forEach{(k,v)->put(k,v.json())}}).toString()
     fun copy()=parse(json())

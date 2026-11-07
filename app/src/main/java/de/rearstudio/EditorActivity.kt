@@ -29,6 +29,7 @@ class EditorActivity:AppCompatActivity(){
             BackgroundLibrary(this).touch(file);remember();scene.profile(targetProfile).imageOptions=org.json.JSONObject();scene.profile(targetProfile).photo=file.absolutePath;scene.profile(targetProfile).background="photo";changed();canvas.refresh();controls()
         }catch(_:Exception){file.delete();toast("image_failed")}}
     }
+    private val activityPermission=registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()){granted->if(granted)ActivityData.start(this);canvas.refresh();controls()}
     private var exportSnapshot:StudioScene?=null
     private val exportDesign=registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")){uri->
         if(uri!=null)runCatching{contentResolver.openOutputStream(uri)?.use{SceneArchive.export(this,exportSnapshot?:scene,it)}?:error("No output")}.onSuccess{toast("export_done")}.onFailure{toast("archive_failed")}
@@ -137,6 +138,35 @@ class EditorActivity:AppCompatActivity(){
                 }.setNegativeButton(t("cancel"),null).show()
         }
         val w=p.widgets.find{it.id==selected};if(w!=null){val box=StudioUi.card(this,panel);label(box,w.kind,18f);switch(box,"widget_enabled",w.enabled){w.enabled=it};switch(box,"locked",w.locked){w.locked=it;controls()};if(w.locked)return;slider(box,"rotation",w.rotation.toInt(),0,359){w.rotation=it.toFloat()};StudioUi.button(this,box,t("duplicate")){remember();val clone=StudioWidget.read(org.json.JSONObject(w.json().toString()).put("id",java.util.UUID.randomUUID().toString()));if(w.kind=="clock"){toast("one_clock")}else{p.widgets.add(clone);selected=clone.id;changed();controls()}};StudioUi.button(this,box,t("layer_up")){val i=p.widgets.indexOf(w);if(i<p.widgets.lastIndex){remember();java.util.Collections.swap(p.widgets,i,i+1);changed();controls()}};StudioUi.button(this,box,t("layer_down")){val i=p.widgets.indexOf(w);if(i>0){remember();java.util.Collections.swap(p.widgets,i,i-1);changed();controls()}};if(w.kind=="clock"){val styles=listOf("digital","stacked","analog","elegant","minimal");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}};if(w.kind=="notification"){val styles=listOf("compact","card","liquid","gradient","minimal");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}}
+            if(w.kind=="rotation_widget"){
+                switch(box,"auto_rotate",w.options.optBoolean("autoRotate",true)){w.options.put("autoRotate",it)}
+                StudioUi.button(this,box,t("rotation_slides")){rotationSlides(w)}
+            }
+            if(w.kind!="gradient"){
+                val fonts=listOf("sans-serif")+StudioFonts.families.keys;choice(box,"font",fonts,fonts.indexOf(w.options.optString("font","sans-serif")).coerceAtLeast(0)){w.options.put("font",fonts[it])}
+                switch(box,"bold",w.options.optBoolean("bold")){w.options.put("bold",it)}
+                switch(box,"italic",w.options.optBoolean("italic")){w.options.put("italic",it)}
+            }
+            if(w.kind=="clock"){
+                color(box,"hour_color",w.options.optInt("hourColor",w.color)){w.options.put("hourColor",it)}
+                color(box,"minute_color",w.options.optInt("minuteColor",w.color)){w.options.put("minuteColor",it)}
+                color(box,"second_color_clock",w.options.optInt("secondColor",w.color)){w.options.put("secondColor",it)}
+                switch(box,"seconds",w.options.optBoolean("seconds")){w.options.put("seconds",it)}
+            }
+            if(w.kind=="weather"){
+                val styles=listOf("titanium","liquid");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}
+                switch(box,"show_weather_details",w.options.optBoolean("showDetails",true)){w.options.put("showDetails",it)}
+                StudioUi.button(this,box,t("weather_setup")){weatherSetup()}
+                StudioUi.button(this,box,t("refresh_weather")){WeatherData.refresh(this,true)}
+            }
+            if(w.kind=="activity"){
+                val styles=listOf("titanium","liquid","gradient");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}
+                slider(box,"step_goal",w.options.optInt("goal",8000),1000,30000){w.options.put("goal",it)}
+                switch(box,"show_label",w.options.optBoolean("showLabel",true)){w.options.put("showLabel",it)}
+                switch(box,"show_goal",w.options.optBoolean("showGoal",true)){w.options.put("showGoal",it)}
+                switch(box,"show_chart",w.options.optBoolean("showChart",true)){w.options.put("showChart",it)}
+                StudioUi.button(this,box,t("activity_access")){activityPermission.launch(android.Manifest.permission.ACTIVITY_RECOGNITION)}
+            }
             if(w.kind=="text")StudioUi.button(this,box,t("edit_text")){val input=EditText(this).apply{setText(w.options.optString("text","Text"))};MaterialAlertDialogBuilder(this).setTitle(t("edit_text")).setView(input).setNegativeButton(t("cancel"),null).setPositiveButton(t("done")){_,_->remember();w.options.put("text",input.text.toString().take(1000));changed()}.show()}
             if(w.kind=="gradient"){val types=listOf("linear","radial","sweep");choice(box,"gradient_type",types,types.indexOf(w.style).coerceAtLeast(0)){w.style=types[it]};color(box,"second_color",w.options.optInt("color2",scene.accent)){w.options.put("color2",it)}
                 slider(box,"gradient_angle",w.options.optInt("angle",45),0,359){w.options.put("angle",it)}
@@ -145,6 +175,30 @@ class EditorActivity:AppCompatActivity(){
                 StudioUi.button(this,box,t("gradient_stops")){gradientStops(w)}
             }
             StudioUi.button(this,box,t("eyedropper")){PixelPicker.show(this,canvas,w.color){picked->remember();w.color=picked;changed();controls()}};color(box,"color",w.color){w.color=it};coordinate(box,"width",w.w,true){w.w=it};coordinate(box,"height",w.h,true){w.h=it};coordinate(box,"position_x",w.x){w.x=it};coordinate(box,"position_y",w.y){w.y=it};slider(box,"opacity",w.opacity,0,100){w.opacity=it};StudioUi.button(this,box,"× "+t("remove_widget")){remember();p.widgets.remove(w);selected=null;changed();controls()}}
+    }
+    private fun rotationSlides(widget:StudioWidget){
+        val slides=RotationSpec.slides(widget).toMutableList();val box=StudioUi.column(this)
+        val dialog=MaterialAlertDialogBuilder(this).setTitle(t("rotation_slides")).setView(ScrollView(this).apply{addView(box)}).setNegativeButton(t("cancel"),null).setPositiveButton(t("save")){_,_->remember();widget.options.put("slides",org.json.JSONArray(slides.map{org.json.JSONObject().put("kind",it.first).put("seconds",it.second)}));changed()}.create()
+        fun render(){box.removeAllViews();slides.toList().forEachIndexed{i,slide->
+            val row=StudioUi.card(this,box)
+            StudioUi.button(this,row,"${i+1}. ${t(slide.first)}"){MaterialAlertDialogBuilder(this).setItems(RotationSpec.kinds.map(::t).toTypedArray()){_,n->slides[i]=RotationSpec.kinds[n] to slides[i].second;render()}.show()}
+            row.addView(StudioUi.label(this,"${slide.second} s"))
+            row.addView(SeekBar(this).apply{max=118;progress=slide.second-2;setOnSeekBarChangeListener(object:SeekBar.OnSeekBarChangeListener{override fun onStartTrackingTouch(s:SeekBar?){};override fun onStopTrackingTouch(s:SeekBar?){render()};override fun onProgressChanged(s:SeekBar?,v:Int,user:Boolean){if(user)slides[i]=slides[i].first to v+2}})})
+            if(slides.size>1)StudioUi.button(this,row,t("remove_widget")){slides.removeAt(i);render()}
+        };if(slides.size<8)StudioUi.button(this,box,t("add_widget")){slides.add("music" to 10);render()}}
+        render();dialog.show()
+    }
+    private fun weatherSetup(){
+        val box=StudioUi.column(this);box.addView(StudioUi.label(this,t("weather_consent")))
+        val prefs=getSharedPreferences("studio_weather",0)
+        val latitude=EditText(this).apply{hint=t("latitude");setText(prefs.getString("latitude",""));inputType=android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL or android.text.InputType.TYPE_NUMBER_FLAG_SIGNED};box.addView(latitude)
+        val longitude=EditText(this).apply{hint=t("longitude");setText(prefs.getString("longitude",""));inputType=latitude.inputType};box.addView(longitude)
+        val dialog=MaterialAlertDialogBuilder(this).setTitle(t("weather_setup")).setView(box).setNegativeButton(t("cancel"),null).setNeutralButton(t("disable_weather")){_,_->WeatherData.disable(this);canvas.refresh()}.setPositiveButton(t("save"),null).create()
+        dialog.setOnShowListener{dialog.getButton(-1).setOnClickListener{
+            val lat=latitude.text.toString().replace(',','.').toDoubleOrNull();val lon=longitude.text.toString().replace(',','.').toDoubleOrNull()
+            if(lat==null||lon==null||!lat.isFinite()||!lon.isFinite()||lat !in -90.0..90.0||lon !in -180.0..180.0){latitude.error=t("invalid_location");return@setOnClickListener}
+            WeatherData.configure(this,lat,lon);dialog.dismiss()
+        }};dialog.show()
     }
     private fun gradientStops(widget:StudioWidget){
         val stops=GradientSpec.read(widget).stops.toMutableList()
@@ -172,7 +226,7 @@ class EditorActivity:AppCompatActivity(){
             remember();GradientSpec.write(widget,stops);changed();controls();dialog.dismiss()
         }};render();dialog.show()
     }
-    private fun addWidget(){val sheet=BottomSheetDialog(this);val box=StudioUi.column(this).apply{setPadding(24,24,24,32)};box.addView(StudioUi.label(this,t("add_widget"),22f));listOf("clock","date","battery","music","football","f1","notification","gradient","text").forEach{kind->StudioUi.button(this,box,t(kind)){val p=scene.profile(profile);if(kind=="clock"&&p.widgets.any{it.kind=="clock"}){toast("one_clock");return@button};if(p.widgets.size>=128){toast("widget_limit");return@button};remember();val w=StudioWidget(kind=kind,y=.25f,h=if(kind=="music").6f else .32f,color=scene.accent);p.widgets.add(w);selected=w.id;changed();controls();sheet.dismiss()}};sheet.setContentView(box);sheet.show()}
+    private fun addWidget(){val sheet=BottomSheetDialog(this);val box=StudioUi.column(this).apply{setPadding(24,24,24,32)};box.addView(StudioUi.label(this,t("add_widget"),22f));listOf("clock","date","battery","music","activity","weather","rotation_widget","football","f1","notification","gradient","text").forEach{kind->StudioUi.button(this,box,t(kind)){val p=scene.profile(profile);if(kind=="clock"&&p.widgets.any{it.kind=="clock"}){toast("one_clock");return@button};if(p.widgets.size>=128){toast("widget_limit");return@button};remember();val w=StudioWidget(kind=kind,y=.25f,h=if(kind=="music").6f else .32f,color=scene.accent);p.widgets.add(w);selected=w.id;changed();controls();sheet.dismiss()}};sheet.setContentView(box);sheet.show()}
     private fun background(){val p=scene.profile(profile);val box=StudioUi.column(this);val types=listOf("gradient","solid","photo","gallery");choice(box,"background",types,types.indexOf(p.background).coerceAtLeast(0)){p.background=types[it]};color(box,"color",p.color){p.color=it};color(box,"second_color",p.color2){p.color2=it};slider(box,"dimming",p.dim,0,90){p.dim=it};StudioUi.button(this,box,t("choose_photo")){photo.launch(arrayOf("image/*"))};StudioUi.button(this,box,t("my_backgrounds")){BackgroundLibraryDialog.show(this){path->remember();p.photo=path;p.background="photo";p.imageOptions=org.json.JSONObject();changed();canvas.refresh()}};
         slider(box,"image_scale",p.imageOptions.optInt("scale",100),100,300){p.imageOptions.put("scale",it)}
         slider(box,"image_pan_x",p.imageOptions.optInt("panX",0),-100,100){p.imageOptions.put("panX",it)}

@@ -8,6 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.*
 import java.util.zip.*
+@org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
 @RunWith(AndroidJUnit4::class)
 class SceneArchiveTest {
  private val context=ApplicationProvider.getApplicationContext<Context>()

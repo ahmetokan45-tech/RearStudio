@@ -36,6 +36,7 @@ class StudioCanvas(c:Context):View(c){
     var onQuickSwitch:(()->Unit)?=null
     private var longPressed=false
     private val longPress=Runnable{if(!editing&&runtimeActive&&scene.navigation.optBoolean("quickSwitcher",false)){longPressed=true;onQuickSwitch?.invoke()}}
+    private val rotationPositions=mutableMapOf<String,Int>()
     val smartViews=SmartViews()
     private var touchStartX=0f;private var touchStartY=0f
     fun openSmartView(name:String){smartViews.open(name,android.os.SystemClock.elapsedRealtime());refresh()}
@@ -65,6 +66,8 @@ class StudioCanvas(c:Context):View(c){
     private fun shownProfile()=if(profileKey()=="charging"&&profile().reuseNormal)scene.profile("normal") else profile()
     fun refresh(){detectedGeometry=DisplayGeometry.detect(context);update()}
     private fun update(){smartViews.expire(android.os.SystemClock.elapsedRealtime(),scene.navigation.optInt("timeout",30));if(forcedProfile==null)scene=StudioScene.load(context,true)
+        if(scene.profiles.values.any{it.widgets.any{w->w.kind in listOf("activity","rotation_widget")&&w.enabled}})ActivityData.start(context)
+        if(scene.profiles.values.any{it.widgets.any{w->w.kind in listOf("weather","rotation_widget")&&w.enabled}})WeatherData.refresh(context)
         val b=context.registerReceiver(null,IntentFilter(Intent.ACTION_BATTERY_CHANGED));val before=charging
         battery=((b?.getIntExtra(BatteryManager.EXTRA_LEVEL,0)?:0)*100/(b?.getIntExtra(BatteryManager.EXTRA_SCALE,100)?:100).coerceAtLeast(1)).coerceIn(0,100)
         charging=(b?.getIntExtra(BatteryManager.EXTRA_PLUGGED,0)?:0)!=0;if(charging&&!before){pluggedAt=System.currentTimeMillis();if(scene.profile("charging").animation)animateUntil=pluggedAt+(scene.profile("charging").duration.takeIf{it>0}?.times(1000L)?:3000L)}
@@ -84,7 +87,9 @@ class StudioCanvas(c:Context):View(c){
         return r.contains(point[0],point[1])
     }
     private fun rect(w:StudioWidget)=RectF(w.x*width,w.y*height,(w.x+w.w)*width,(w.y+w.h)*height)
-    private fun text(canvas:Canvas,value:String,x:Float,y:Float,size:Float,color:Int,maxWidth:Float=width.toFloat(),font:String="sans-serif",align:Paint.Align=Paint.Align.LEFT){textPaint.apply{this.color=color;textSize=size;typeface=Typeface.create(font,Typeface.NORMAL);textAlign=align;shader=null};val v=android.text.TextUtils.ellipsize(value,textPaint,maxWidth.coerceAtLeast(1f),android.text.TextUtils.TruncateAt.END).toString();canvas.drawText(v,x,y,textPaint)}
+    private var activeFont:String?=null
+    private var activeTypefaceStyle=Typeface.NORMAL
+    private fun text(canvas:Canvas,value:String,x:Float,y:Float,size:Float,color:Int,maxWidth:Float=width.toFloat(),font:String="sans-serif",align:Paint.Align=Paint.Align.LEFT){textPaint.apply{this.color=color;textSize=size;typeface=StudioFonts.get(context,activeFont?:font,activeTypefaceStyle);textAlign=align;shader=null};val v=android.text.TextUtils.ellipsize(value,textPaint,maxWidth.coerceAtLeast(1f),android.text.TextUtils.TruncateAt.END).toString();canvas.drawText(v,x,y,textPaint)}
     private fun round(canvas:Canvas,r:RectF,color:Int,radius:Float=height*.04f){p.apply{this.color=color;style=Paint.Style.FILL;shader=null;alpha=255};canvas.drawRoundRect(r,radius,radius,p)}
     override fun onDraw(canvas:Canvas){super.onDraw(canvas);if(width==0||height==0)return;p.reset();p.isAntiAlias=true;val profile=profile();val shown=shownProfile();val scale=height/596f;val base=height*.065f;val key=profileKey();val level=demoLevel?:battery
         canvas.save();canvas.clipPath(geometry().outline(width.toFloat(),height.toFloat()))
@@ -98,12 +103,41 @@ class StudioCanvas(c:Context):View(c){
             it.colorFilter=ColorMatrixColorFilter(matrix);it.draw(canvas)}};else->{p.shader=LinearGradient(0f,0f,width.toFloat(),height.toFloat(),shown.color,shown.color2,Shader.TileMode.CLAMP);canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),p);p.shader=null}}
         if(shown.dim>0)canvas.drawColor(Color.argb(shown.dim*255/100,0,0,0))
         if(!profile.enabled&&editing){text(canvas,StudioUi.text(context,"profile_off"),width*.4f,height*.5f,base,Color.WHITE,width*.5f)}
-        if(profile.enabled||editing)for(w in shown.widgets){if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save()
+        if(profile.enabled||editing)for(original in shown.widgets){val w=RotationSpec.shown(original,android.os.SystemClock.elapsedRealtime()-animationStarted,rotationPositions[original.id]);if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save()
             val g=geometry()
             for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.clipOutPath(Path().apply{addOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),Path.Direction.CW)})}
             canvas.rotate(w.rotation,r.centerX(),r.centerY());canvas.saveLayerAlpha(r,if(w.enabled)w.opacity*255/100 else 50)
+            activeFont=w.options.optString("font","").takeIf{it.isNotBlank()};activeTypefaceStyle=(if(w.options.optBoolean("bold"))Typeface.BOLD else 0) or (if(w.options.optBoolean("italic"))Typeface.ITALIC else 0)
             val ink=w.color;val pad=height*.035f;val content=r.width()-2*pad
             when(w.kind){
+                "weather"->{
+                    round(canvas,r,if(w.style=="liquid")0x663c424d else 0xff1b1e25.toInt())
+                    val weather=WeatherData.read(context)
+                    if(weather==null){text(canvas,StudioUi.text(context,"weather_setup"),r.left+pad,r.centerY(),base*.4f,ink,content)}else{
+                        text(canvas,String.format(Locale.getDefault(),"%.1f °C",weather.temperature),r.left+pad,r.top+r.height()*.35f,min(base*1.3f,r.height()*.28f),ink,content)
+                        text(canvas,StudioUi.text(context,WeatherData.condition(weather.code)),r.left+pad,r.top+r.height()*.52f,base*.5f,ink,content)
+                        if(w.options.optBoolean("showDetails",true))text(canvas,String.format(Locale.getDefault(),"%d %% · %.1f km/h",weather.humidity,weather.wind),r.left+pad,r.top+r.height()*.70f,base*.4f,ink,content)
+                        text(canvas,(if(WeatherData.stale(context))StudioUi.text(context,"cached_weather")+" · " else "")+weather.observed.replace('T',' '),r.left+pad,r.top+r.height()*.83f,base*.25f,0xffbec2cb.toInt(),content)
+                        text(canvas,"Open-Meteo · CC BY 4.0",r.left+pad,r.bottom-pad,base*.24f,0xffbec2cb.toInt(),content)
+                    }
+                }
+                "activity"->{
+                    when(w.style){
+                        "liquid"->round(canvas,r,0x663c424d)
+                        "gradient"->{p.shader=LinearGradient(r.left,r.top,r.right,r.bottom,intArrayOf(0xff161820.toInt(),w.options.optInt("color2",0xff49302b.toInt())),null,Shader.TileMode.CLAMP);canvas.drawRoundRect(r,height*.04f,height*.04f,p);p.shader=null}
+                        else->round(canvas,r,0xff1b1e25.toInt())
+                    }
+                    val steps=ActivityData.today(context)
+                    val goal=w.options.optInt("goal",8000).coerceAtLeast(1)
+                    if(w.options.optBoolean("showLabel",true))text(canvas,StudioUi.text(context,"activity"),r.left+pad,r.top+r.height()*.17f,base*.4f,ink,content)
+                    text(canvas,steps?.let{java.text.NumberFormat.getIntegerInstance().format(it)}?:"—",r.left+pad,r.top+r.height()*.43f,min(base*1.4f,r.height()*.25f),ink,content)
+                    if(w.options.optBoolean("showGoal",true))text(canvas,"/ "+java.text.NumberFormat.getIntegerInstance().format(goal),r.left+pad,r.top+r.height()*.57f,base*.38f,ink,content)
+                    if(w.options.optBoolean("showChart",true)){
+                        val week=ActivityData.week(context);val max=maxOf(goal.toLong(),week.filterNotNull().maxOrNull()?:1L)
+                        val bw=content/10;week.forEachIndexed{i,v->val left=r.left+pad+i*content/7;p.color=if(v==null)0xff40434b.toInt() else ink;canvas.drawRoundRect(RectF(left,r.top+r.height()*.8f-(v?:0)*r.height()*.18f/max,left+bw,r.top+r.height()*.8f),bw/3,bw/3,p)}
+                    }
+                    text(canvas,StudioUi.text(context,if(ActivityData.available(context))"steps_observed" else "activity_access"),r.left+pad,r.bottom-pad,base*.28f,0xffbfc2ca.toInt(),content)
+                }
                 "unavailable"->text(canvas,StudioUi.text(context,"data_source_unverified"),r.left,r.centerY(),base*.42f,ink,r.width())
                 "text"->text(canvas,w.options.optString("text","Text"),r.left,r.centerY()+r.height()*.2f,r.height()*.6f,ink,r.width())
                 "gradient"->{
@@ -118,7 +152,7 @@ class StudioCanvas(c:Context):View(c){
                     if(gradient.animated&&previewPlaying&&runtimeActive&&!reduced&&isShown)postInvalidateDelayed(33)
                 }
 
-                "clock"->{val now=LocalDateTime.now();val size=min(r.height()*.57f,r.width()*.29f);if(w.style=="analog"){val radius=min(r.width(),r.height())*.40f;p.apply{color=ink;style=Paint.Style.STROKE;strokeWidth=height*.005f};canvas.drawCircle(r.centerX(),r.centerY(),radius,p);for(i in 0..11){val a=i*Math.PI/6;canvas.drawLine(r.centerX()+sin(a).toFloat()*radius*.85f,r.centerY()-cos(a).toFloat()*radius*.85f,r.centerX()+sin(a).toFloat()*radius*.95f,r.centerY()-cos(a).toFloat()*radius*.95f,p)};fun hand(angle:Double,length:Float){p.strokeWidth=height*.009f;p.strokeCap=Paint.Cap.ROUND;canvas.drawLine(r.centerX(),r.centerY(),r.centerX()+sin(angle).toFloat()*radius*length,r.centerY()-cos(angle).toFloat()*radius*length,p)};hand((now.hour%12+now.minute/60.0)*Math.PI/6,.55f);hand(now.minute*Math.PI/30,.82f);p.style=Paint.Style.FILL}else if(w.style=="stacked"){text(canvas,now.format(DateTimeFormatter.ofPattern("HH")),r.left+pad,r.top+r.height()*.45f,size*.8f,ink,content);text(canvas,now.format(DateTimeFormatter.ofPattern("mm")),r.left+pad,r.top+r.height()*.93f,size*.8f,ink,content)}else{text(canvas,now.format(DateTimeFormatter.ofPattern("HH:mm")),r.left+pad,r.top+r.height()*.60f,size,ink,content,if(w.style=="elegant")"serif" else "sans-serif-light");if(w.style!="minimal")text(canvas,now.format(DateTimeFormatter.ofPattern("EEE, d. MMM",Locale.getDefault())),r.left+pad,r.bottom-pad,base*.47f,ink,content)}}
+                "clock"->{val now=LocalDateTime.now();val size=min(r.height()*.57f,r.width()*.29f);if(w.style=="analog"){val radius=min(r.width(),r.height())*.40f;p.apply{color=ink;style=Paint.Style.STROKE;strokeWidth=height*.005f};canvas.drawCircle(r.centerX(),r.centerY(),radius,p);for(i in 0..11){val a=i*Math.PI/6;canvas.drawLine(r.centerX()+sin(a).toFloat()*radius*.85f,r.centerY()-cos(a).toFloat()*radius*.85f,r.centerX()+sin(a).toFloat()*radius*.95f,r.centerY()-cos(a).toFloat()*radius*.95f,p)};fun hand(angle:Double,length:Float){p.strokeWidth=height*.009f;p.strokeCap=Paint.Cap.ROUND;canvas.drawLine(r.centerX(),r.centerY(),r.centerX()+sin(angle).toFloat()*radius*length,r.centerY()-cos(angle).toFloat()*radius*length,p)};p.color=w.options.optInt("hourColor",ink);hand((now.hour%12+now.minute/60.0)*Math.PI/6,.55f);p.color=w.options.optInt("minuteColor",ink);hand(now.minute*Math.PI/30,.82f);if(w.options.optBoolean("seconds")){p.color=w.options.optInt("secondColor",ink);hand(now.second*Math.PI/30,.92f)};p.style=Paint.Style.FILL}else if(w.style=="stacked"){text(canvas,now.format(DateTimeFormatter.ofPattern("HH")),r.left+pad,r.top+r.height()*.45f,size*.8f,w.options.optInt("hourColor",ink),content);text(canvas,now.format(DateTimeFormatter.ofPattern("mm")),r.left+pad,r.top+r.height()*.93f,size*.8f,w.options.optInt("minuteColor",ink),content)}else{val seconds=w.options.optBoolean("seconds");val count=if(seconds)3 else 2;val segment=content/count;val parts=if(seconds)listOf(now.hour,now.minute,now.second)else listOf(now.hour,now.minute);parts.forEachIndexed{i,value->text(canvas,String.format(Locale.getDefault(),"%02d",value)+(if(i<count-1)":" else ""),r.left+pad+i*segment,r.top+r.height()*.60f,min(size,segment*.60f),w.options.optInt(listOf("hourColor","minuteColor","secondColor")[i],ink),segment,if(w.style=="elegant")"serif" else "sans-serif-light")};if(w.style!="minimal")text(canvas,now.format(DateTimeFormatter.ofPattern("EEE, d. MMM",Locale.getDefault())),r.left+pad,r.bottom-pad,base*.47f,ink,content)}}
                 "date"->{round(canvas,r,0xcc282a34.toInt());val now=LocalDateTime.now();text(canvas,now.format(DateTimeFormatter.ofPattern("EEE",Locale.getDefault())).uppercase(),r.left+pad,r.top+r.height()*.35f,base*.4f,ink,content);text(canvas,now.format(DateTimeFormatter.ofPattern("dd.MM.")),r.left+pad,r.bottom-pad,base*.85f,ink,content)}
                 "battery"->{if(!(key=="charging"&&profile.chargeEnabled&&profile.chargeStyle in listOf("ring","bar","minimal"))) {round(canvas,r,0xcc282a34.toInt());text(canvas,if(key=="charging"&&!profile.percentage)"ϟ"else "${if(charging)"ϟ " else ""}$level%",r.left+pad,r.centerY()+base*.3f,min(base,r.height()*.6f),ink,content)}}
                 "music"->{round(canvas,r,0xff323043.toInt());artwork?.let{val saved=canvas.save();canvas.clipRoundRectCompat(r,height*.04f);canvas.drawBitmap(it,null,r,p.apply{shader=null;alpha=170;style=Paint.Style.FILL});canvas.restoreToCount(saved);p.alpha=255};round(canvas,r,0x55000000);text(canvas,song.ifBlank{StudioUi.text(context,if(MediaHub.granted(context))"start_player" else "music_access")},r.left+pad,r.top+r.height()*.35f,min(base*.7f,r.height()*.18f),Color.WHITE,content);text(canvas,artist,r.left+pad,r.top+r.height()*.54f,base*.43f,0xffdedbe6.toInt(),content);val yy=r.top+r.height()*.8f;for(i in 0..2){val xx=r.left+r.width()*(.23f+i*.27f);text(canvas,listOf("‹",if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)"Ⅱ" else "▶","›")[i],xx,yy,base*.8f,Color.WHITE,r.width()*.2f,align=Paint.Align.CENTER)}}
@@ -133,6 +167,7 @@ class StudioCanvas(c:Context):View(c){
             };canvas.restore();canvas.restore()
             if(editing&&w.id==selected){p.apply{color=scene.accent;style=Paint.Style.STROKE;strokeWidth=2f};canvas.drawRoundRect(r,10f,10f,p);p.style=Paint.Style.FILL;canvas.drawCircle(r.right,r.top,14f*scale,p);canvas.drawCircle(r.right,r.bottom,12f*scale,p);text(canvas,"×",r.right,r.top+8f*scale,28f*scale,StudioUi.BG,40f*scale,align=Paint.Align.CENTER)}
         }
+        activeFont=null;activeTypefaceStyle=Typeface.NORMAL
         if(key=="charging"&&profile.chargeEnabled&&profile.enabled){val alpha=profile.chargeOpacity*255/100;val colors=when(profile.palette){"rainbow"->intArrayOf(0xffe87878.toInt(),0xffebc974.toInt(),0xff95c4a5.toInt(),0xff8faeef.toInt(),0xffbb97d5.toInt());"solid"->intArrayOf(profile.chargeColor,profile.chargeColor);else->intArrayOf(profile.chargeColor,profile.chargeColor2)};p.shader=LinearGradient(0f,0f,width.toFloat(),height.toFloat(),colors,null,Shader.TileMode.CLAMP);p.alpha=alpha;p.strokeWidth=profile.thickness*2*scale;p.strokeCap=Paint.Cap.ROUND
             val energy=shown.widgets.firstOrNull{it.kind=="battery"};val rr=energy?.let(::rect)?:RectF(width*.37f,height*.55f,width*.92f,height*.83f)
             if(profile.glow)p.setShadowLayer(profile.thickness*scale,0f,0f,profile.chargeColor)
@@ -163,9 +198,14 @@ class StudioCanvas(c:Context):View(c){
             if(event.actionMasked==MotionEvent.ACTION_UP){
                 handler.removeCallbacks(longPress);if(longPressed){performClick();return true}
                 val direction=SmartViews.direction(x-touchStartX,y-touchStartY,StudioUi.dp(context,48).toFloat())
+                val rotating=ws.lastOrNull{it.enabled&&it.kind=="rotation_widget"&&hit(it,touchStartX,touchStartY)}
+                if(rotating!=null&&direction in listOf(SwipeDirection.LEFT,SwipeDirection.RIGHT)){
+                    val current=RotationSpec.index(rotating,android.os.SystemClock.elapsedRealtime()-animationStarted,rotationPositions[rotating.id])
+                    rotationPositions[rotating.id]=current+(if(direction==SwipeDirection.LEFT)1 else -1);invalidate();performClick();return true
+                }
                 if(direction!=null&&(smartViews.opened!=null||forcedProfile!=null||scene.navigation.optBoolean("enabled",false))){smartViews.swipe(direction,scene.navigation,android.os.SystemClock.elapsedRealtime());refresh();performClick();return true}
                 if(smartViews.opened!=null&&x>width-height*.15f&&y<height*.15f){smartViews.close();refresh();performClick();return true}
-val w=ws.lastOrNull{it.enabled&&hit(it,x,y)}?:return false;if(w.kind=="notification"){RearNotificationListener.recent().firstOrNull()?.let{NotificationOpen.open(context,it.key)};return true};if(w.kind=="music"){val r=rect(w);if(y>r.top+r.height()*.6f){try{val controls=media?.transportControls;when(((x-r.left)/r.width()*3).toInt().coerceIn(0,2)){0->controls?.skipToPrevious();1->if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)controls?.pause() else controls?.play();2->controls?.skipToNext()}}catch(_:RuntimeException){};invalidate();return true}}};return true}
+val original=ws.lastOrNull{it.enabled&&hit(it,x,y)}?:return false;val w=RotationSpec.shown(original,android.os.SystemClock.elapsedRealtime()-animationStarted,rotationPositions[original.id]);if(w.kind=="notification"){RearNotificationListener.recent().firstOrNull()?.let{NotificationOpen.open(context,it.key)};return true};if(w.kind=="music"){val r=rect(w);if(y>r.top+r.height()*.6f){try{val controls=media?.transportControls;when(((x-r.left)/r.width()*3).toInt().coerceIn(0,2)){0->controls?.skipToPrevious();1->if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)controls?.pause() else controls?.play();2->controls?.skipToNext()}}catch(_:RuntimeException){};invalidate();return true}}};return true}
         when(event.actionMasked){MotionEvent.ACTION_DOWN->{if(profileKey()=="charging"&&profile().chargeEnabled&&profile().chargeStyle=="edge"&&hypot(x-(width-height*.045f),y-height*.045f)<StudioUi.dp(context,18)){onBeforeChange?.invoke();profile().chargeEnabled=false;onChanged?.invoke();invalidate();return true};val current=ws.find{it.id==selected};val tolerance=StudioUi.dp(context,18).toFloat();if(current!=null&&!current.locked){val r=rect(current);if(hypot(x-r.right,y-r.top)<tolerance){onDelete?.invoke(current.id);return true};resize=hypot(x-r.right,y-r.bottom)<tolerance}
             val target=if(resize)current else ws.asReversed().firstOrNull{hit(it,x,y)};selected=target?.id;onSelect?.invoke(target);if(target==null||target.locked){invalidate();return true};onBeforeChange?.invoke();drag=target.id;dx=x;dy=y;oldX=target.x;oldY=target.y;oldW=target.w;oldH=target.h;moved=false;parent?.requestDisallowInterceptTouchEvent(true);invalidate()}
             MotionEvent.ACTION_MOVE->{val w=ws.find{it.id==drag}?:return true;val xx=(x-dx)/width;val yy=(y-dy)/height;if(resize){w.w=oldW+xx;w.h=oldH+yy}else{w.x=oldX+xx;w.y=oldY+yy};w.constrain();moved=true;invalidate()}

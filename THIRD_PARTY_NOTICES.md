@@ -21,3 +21,18 @@ Historical 0.7 implementation (removed in 0.8): RearBridge.kt adapts the fixed a
 Dependencies additionally include AndroidX AppCompat (Apache-2.0), Material Components Android (Apache-2.0), AndroidX Palette (Apache-2.0), and test-only Robolectric (MIT).
 
 0.9 adds the Studio scene model, shared live renderer/editor, charging profiles, unified media-session access, per-app notification selection, PendingIntent opening and DE/EN/TR menus. Legacy German/Turkish resources were machine-assisted translations of public MIT menu strings, followed by selected corrections; user data was not translated. The inherited engine and its MIT attribution remain. Sports request user-agent is AHM3T45Studio/0.9.
+
+## Studio fonts (V5.6)
+
+Twelve unmodified font families from https://github.com/google/fonts/tree/main/ofl
+are bundled in app/src/main/assets/fonts. Each family has its original OFL.txt beside
+the TTF file. Anton, Rubik, Roboto, Inter, Montserrat, Poppins, Orbitron, Rajdhani,
+Oswald, Exo 2, Bebas Neue and Manrope are used under the SIL Open Font License 1.1.
+Arial is not bundled: no redistributable Arial license was supplied. It is not silently
+substituted and labelled as Arial.
+
+## Weather
+
+Open-Meteo weather data: https://open-meteo.com/ — CC BY 4.0 attribution is shown in
+the widget. The public API is used for this non-commercial development build only.
+A commercial service agreement / production endpoint is required before a paid release.
