@@ -94,6 +94,7 @@ class StudioCanvas(c:Context):View(c){
     private var activeTypefaceStyle=Typeface.NORMAL
     private fun text(canvas:Canvas,value:String,x:Float,y:Float,size:Float,color:Int,maxWidth:Float=width.toFloat(),font:String="sans-serif",align:Paint.Align=Paint.Align.LEFT){textPaint.apply{this.color=color;textSize=size;typeface=StudioFonts.get(context,activeFont?:font,activeTypefaceStyle);textAlign=align;shader=null};val v=android.text.TextUtils.ellipsize(value,textPaint,maxWidth.coerceAtLeast(1f),android.text.TextUtils.TruncateAt.END).toString();canvas.drawText(v,x,y,textPaint)}
     private fun round(canvas:Canvas,r:RectF,color:Int,radius:Float=height*.04f){p.apply{this.color=color;style=Paint.Style.FILL;shader=null;alpha=Color.alpha(color)};canvas.drawRoundRect(r,radius,radius,p)}
+    private val artworkRenderer=UserArtwork.Renderer(context)
     override fun onDraw(canvas:Canvas){super.onDraw(canvas);if(width==0||height==0)return;p.reset();p.isAntiAlias=true;val profile=profile();val shown=shownProfile();val scale=height/596f;val base=height*.065f;val key=profileKey();val level=demoLevel?:battery
         if(previousAnimationProfile!=key){previousAnimationProfile=key;restartAnimation()}
         canvas.save();canvas.clipPath(geometry().outline(width.toFloat(),height.toFloat()))
@@ -195,8 +196,9 @@ class StudioCanvas(c:Context):View(c){
         }
         val reducedMotion=context.getSystemService(android.os.PowerManager::class.java)?.isPowerSaveMode==true||!android.animation.ValueAnimator.areAnimatorsEnabled()
         val time=(if(previewPlaying)android.os.SystemClock.elapsedRealtime() else pausedAt)-animationStarted
-        CameraLightRenderer.draw(canvas,geometry(),width,height,profile.cameraLight,time,reducedMotion)
-        if(profile.cameraLight.enabled&&geometry().lenses.size==2&&previewPlaying&&runtimeActive&&!reducedMotion&&isShown&&windowVisibility==VISIBLE&&profile.cameraLight.effect!="static")postInvalidateDelayed(33)
+        if(profile.artworkOverlay.isNotEmpty())artworkRenderer.draw(canvas,profile.artworkOverlay,width,height)
+        else {artworkRenderer.draw(canvas,"",width,height);CameraLightRenderer.draw(canvas,geometry(),width,height,profile.cameraLight,time,reducedMotion)}
+        if(profile.artworkOverlay.isEmpty()&&profile.cameraLight.enabled&&geometry().lenses.size==2&&previewPlaying&&runtimeActive&&!reducedMotion&&isShown&&windowVisibility==VISIBLE&&profile.cameraLight.effect!="static")postInvalidateDelayed(33)
         if(cameraGuides){p.shader=null;p.color=0x55777788;p.style=Paint.Style.STROKE;p.strokeWidth=1f;val g=geometry();for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.drawOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),p)};p.style=Paint.Style.FILL}
         canvas.restore()
     }

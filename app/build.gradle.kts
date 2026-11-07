@@ -3,7 +3,7 @@ android {
     buildFeatures { compose = true }
     namespace = "de.rearstudio"
     compileSdk = 36
-    defaultConfig { applicationId = "de.rearstudio"; minSdk = 35; targetSdk = 36; versionCode = 12; versionName = "0.12-v56-development" }
+    defaultConfig { applicationId = "de.rearstudio"; minSdk = 35; targetSdk = 36; versionCode = 13; versionName = "0.13-v56-development" }
     buildTypes {
         getByName("debug") {
             applicationIdSuffix = ".v56dev"

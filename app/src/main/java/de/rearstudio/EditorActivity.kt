@@ -114,6 +114,14 @@ class EditorActivity:AppCompatActivity(){
         val directions=SwipeDirection.entries.map{it.name};choice(nav,"close_gesture",directions,directions.indexOf(scene.navigation.optString("close","DOWN")).coerceAtLeast(0)){scene.navigation.put("close",directions[it])}
         slider(nav,"idle_timeout",scene.navigation.optInt("timeout",30),0,300){scene.navigation.put("timeout",it)}
         val light=StudioUi.card(this,panel);label(light,"camera_light",18f)
+        StudioUi.button(this,light,"Original Kamera-Lichtebene: "+UserArtwork.overlays.getValue(UserArtwork.validOverlay(p.artworkOverlay))){
+            val ids=UserArtwork.overlays.keys.toList()
+            MaterialAlertDialogBuilder(this).setTitle("Original Kamera-Lichtebene").setSingleChoiceItems(UserArtwork.overlays.values.toTypedArray(),ids.indexOf(p.artworkOverlay).coerceAtLeast(0)){dialog,index->
+                remember();p.artworkOverlay=ids[index];changed();canvas.invalidate();dialog.dismiss();controls()
+            }.setNegativeButton(t("cancel"),null).show()
+        }
+        label(light,"Originale: feste Geometrie, unabhängig vom Hintergrund. Bei Auswahl ersetzen sie das berechnete Kameralicht.",12f)
+
         if(canvas.geometry().lenses.size!=2){label(light,"camera_calibration_required",12f)}else{
             switch(light,"light_enabled",p.cameraLight.enabled){p.cameraLight=p.cameraLight.copy(enabled=it);canvas.restartAnimation()}
             val effects=listOf("static","pulse","blink","wave","chase")

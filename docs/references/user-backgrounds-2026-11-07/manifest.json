@@ -1,0 +1,182 @@
+{
+  "provenance": "User-uploaded originals; user confirms exact camera cutouts. Additional files expected.",
+  "policy": "Preserve source bytes, full canvas, aspect ratio, alpha and cutout positions. Do not infer physical lens boundaries from coloured glow. Existing 93534.png reference remains preserved. Bundled in 0.13: nine JPG backgrounds and six visible PNG overlays; two fully transparent PNGs remain reference-only. Device alignment unverified.",
+  "files": [
+    {
+      "file": "102141.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "91d8348cb22892e5c03d89815e59786a0b84309a5f3859856bde20e81707710d",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "102142.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "262f3b931e1e152f39cb6528d75a17dfb475def7c8a5e02a0d42d5b3ff69a8d3",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "102281.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "3eea07e33d8f031cc92d620af5953806299e7400ddf1d6f87d19b4e497a057ae",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        0
+      ]
+    },
+    {
+      "file": "102282.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "c7dec6e6f71e773658644d8cf9f2ca267807adff3de11e878430fbc9c436fb3e",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        0
+      ]
+    },
+    {
+      "file": "102283.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "949621b0b7f035677ca0ea488328914b8a3c16b93844d313c18170d04801cf3c",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        166
+      ]
+    },
+    {
+      "file": "102284.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "2df654e9830500dab3ac87f2c70fa51af081452d651a3c75eb5f726e8dae2bd5",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        166
+      ]
+    },
+    {
+      "file": "102285.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "599b056b4c8299301881740420605fdf975fa4cc9f8092a88711107211650718",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "102286.png",
+      "width": 976,
+      "height": 596,
+      "mode": "RGBA",
+      "sha256": "8d3bf40a5e781fc377355513ca4d872e44dff7918bcf2833f79463967ddfadb5",
+      "frames": 1,
+      "alpha_extrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "file": "99754.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "eb2904cfbceba8c81c1b173eb9de60e89daceead501201d7f0038d889d0a2d00",
+      "frames": 1
+    },
+    {
+      "file": "99750.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "82d55becb029f8cc874d2356823576b1b74a574bb214f7780464e9d55012cae5",
+      "pixel_sha256": "7c3160917e0ff4bc96790bdf77574b86470de393fb803f10bda5a6cedeea0766",
+      "role": "background only; camera masks kept separate"
+    },
+    {
+      "file": "99751.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "914231d1e943ca1235ed078b7dda1e79f4f8ed00fb669f648e3817d9625e6e9c",
+      "pixel_sha256": "dd942678585cb0f680509ae0072d4b990741209e6881860075183aa4f0b24b90",
+      "role": "background only; camera masks kept separate"
+    },
+    {
+      "file": "99757.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "edad1d7b57b61fd79db4c0328d1520ae1e6cfe45ce9b8540a27c2ce521535382",
+      "pixel_sha256": "08145abc3f3433949dc64cff994166858cbc57a8989f7004739e5984eaba5c71",
+      "role": "background only; camera masks kept separate"
+    },
+    {
+      "file": "99758.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "61f44d11a5913b5697e630b78efc71d3a2f00601c06a41e85e3556f871731f69",
+      "pixel_sha256": "460bd1e72ad5e8cded9ff7fd46be19f3e20a495bad040815bcc683b0b18a6bec",
+      "role": "background only; camera masks kept separate"
+    },
+    {
+      "file": "99759.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "0ca710dd1ad81ce64ddc51f6818045bcf221138b12f11936c67335cab13a964f",
+      "pixel_sha256": "a4b8fd13f4985b592852f5ccdb14382717794edd6e05166b627bcefd0cd833be",
+      "role": "background only; camera masks kept separate"
+    },
+    {
+      "file": "99760.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "9418ba1c069f5df81693101ab064ac1d37c95353f743edfecb5024f863a8597a",
+      "pixel_sha256": "50d7e47e274c504d9f436a5fb986ea1fde6089b7c0b6e6234095b7a4f3f9f6ce",
+      "role": "background only; camera masks kept separate"
+    },
+    {
+      "file": "99815.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "96c42d70d6c59eb3883cb395dcdddee16a38f234659c030c325915b976f0c07b",
+      "pixel_sha256": "75fc4ea6f4ef8e990f4cdec52b14adcb8c462fd9c29618b085383d448d36130e",
+      "role": "background only; camera masks kept separate"
+    },
+    {
+      "file": "99823.jpg",
+      "width": 1536,
+      "height": 864,
+      "mode": "RGB",
+      "sha256": "b784d452899124db8c9bd8d1ea5b1a5277d58b44999ce08bef457fe0d1698c2a",
+      "pixel_sha256": "b9901aa11b33158ec6f7ee6d0b5356754ede808a7674a4eae9c6b89d3d243dfe",
+      "role": "background only; camera masks kept separate"
+    }
+  ]
+}

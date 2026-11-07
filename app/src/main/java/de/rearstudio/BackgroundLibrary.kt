@@ -6,7 +6,7 @@ import java.io.File
 
 /** The original imported file is private, persistent, and never rewritten by image adjustments. */
 class BackgroundLibrary(private val context:Context) {
-    init{PremiumBackgrounds.install(context)}
+    init{PremiumBackgrounds.install(context);UserArtwork.install(context)}
     data class Entry(val file:File,val name:String,val favorite:Boolean,val usedAt:Long)
     private val prefs=context.getSharedPreferences("studio_backgrounds",0)
     fun list():List<Entry> = context.filesDir.listFiles().orEmpty().filter{it.isFile&&it.name.startsWith("scene-")}.mapNotNull{file->

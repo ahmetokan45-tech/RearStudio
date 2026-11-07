@@ -107,3 +107,6 @@ permission denial, Shizuku disconnect, screen-off/lock/reboot, media metadata an
 controls, genuine notification privacy, close/swipe/idle behavior, charging
 competition, persistence, animations and battery/thermal behavior. Installation
 alone is not proof that any Xiaomi-specific feature works.
+
+## Original artwork integration (next APK, 0.13)
+Nine supplied JPG backgrounds are available in Editor → Hintergrund → Meine Hintergründe, installed byte-for-byte offline. Six visible supplied PNG overlays are selectable per profile under Kamera-Licht → Original Kamera-Lichtebene, including notification and charging profiles. A selected original replaces calculated camera rings. Overlay geometry uses an independent aspect-preserving 976×596 canvas and is unaffected by background crop, pan, zoom, dimming or color adjustments. These are static artwork layers, not newly animated notification effects. Two fully transparent PNG originals are retained only as references and excluded from selection. Device alignment remains unverified; no hardware geometry calibration is inferred from image glow. Existing feature gaps elsewhere in this document remain open. This is a test APK, not a complete V5.6 release.
