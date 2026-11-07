@@ -46,4 +46,8 @@
     <string name="s_rotation_widget">Wechsel-Widget</string>
     <string name="s_auto_rotate">Inhalte automatisch wechseln</string>
     <string name="s_rotation_slides">Inhalte und Anzeigedauer</string>
+    <string name="s_background_in_use">Dieses Bild wird von einem aktiven, gespeicherten oder wiederherstellbaren Design verwendet.</string>
+    <string name="s_fade_in">Einblenden (ms)</string>
+    <string name="s_fade_out">Ausblenden (ms)</string>
+<string name="s_elements">Elemente</string>
 </resources>

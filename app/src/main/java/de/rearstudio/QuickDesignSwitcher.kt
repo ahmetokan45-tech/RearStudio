@@ -28,7 +28,7 @@ class QuickDesignSwitcher(context:Context, private val current:StudioScene, priv
         button(t("cancel")){close()}
         button(t("apply_design")){if(entries.isNotEmpty()){
             val next=DesignLibrary.compose(current,StudioScene.parse(entries[index].scene),backgroundOnly)
-            context.getSharedPreferences("studio",0).edit().putString("previous_scene",current.json()).apply()
+            context.getSharedPreferences("studio",0).edit().putString("previous_design",current.json()).apply()
             StudioScene.save(context,next);library.touch(entries[index].id);close()
         }}
         column.addView(CheckBox(context).apply{text=t("background_only");setTextColor(StudioUi.TEXT);setOnCheckedChangeListener{_,value->backgroundOnly=value;render()}})

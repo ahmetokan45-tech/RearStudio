@@ -9,7 +9,7 @@ object CameraLightRenderer {
         val frame=settings.frame(elapsed,reducedMotion)
         if(frame.alpha<=0f)return
         val sx=width/geometry.width;val sy=height/geometry.height
-        val p=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.STROKE;strokeWidth=height*.009f;alpha=(frame.alpha*255).toInt()}
+        val p=Paint(Paint.ANTI_ALIAS_FLAG).apply{style=Paint.Style.STROKE;strokeWidth=height*settings.thickness.coerceIn(1,30)/1000f;alpha=(frame.alpha*255).toInt()}
         val save=canvas.save()
         for(lens in geometry.lenses){
             val exclusion=Path().apply{addOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),Path.Direction.CW)}
@@ -24,6 +24,11 @@ object CameraLightRenderer {
                 else->null
             }
             p.color=settings.color;p.alpha=(frame.alpha*255).toInt()
+            if(settings.glow>0){
+                val stroke=p.strokeWidth
+                for(layer in 3 downTo 1){p.strokeWidth=stroke*(1+layer);p.alpha=(frame.alpha*settings.glow.coerceIn(0,100)/100f*32/layer).toInt();canvas.drawOval(ring,p)}
+                p.strokeWidth=stroke;p.alpha=(frame.alpha*255).toInt()
+            }
             if(!reducedMotion&&settings.effect in listOf("wave","chase"))canvas.drawArc(ring,frame.phase*360f,if(settings.effect=="wave")150f else 70f,false,p)
             else canvas.drawOval(ring,p)
         }

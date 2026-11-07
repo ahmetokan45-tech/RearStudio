@@ -1,5 +1,6 @@
-plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
+plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.plugin.compose") }
 android {
+    buildFeatures { compose = true }
     namespace = "de.rearstudio"
     compileSdk = 36
     defaultConfig { applicationId = "de.rearstudio"; minSdk = 35; targetSdk = 36; versionCode = 12; versionName = "0.12-v56-development" }
@@ -18,6 +19,10 @@ android {
     kotlinOptions { jvmTarget = "17" }
 }
 dependencies {
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.appcompat:appcompat:1.8.0")
     implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.palette:palette:1.0.0")

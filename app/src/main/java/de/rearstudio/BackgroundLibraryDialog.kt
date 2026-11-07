@@ -6,7 +6,7 @@ import android.widget.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 object BackgroundLibraryDialog {
-    fun show(context:Context,apply:(String)->Unit){
+    fun show(context:Context,current:StudioScene?=null,apply:(String)->Unit){
         val library=BackgroundLibrary(context);val box=StudioUi.column(context);val scroll=ScrollView(context).apply{addView(box)}
         fun t(key:String)=StudioUi.text(context,key)
         val dialog=MaterialAlertDialogBuilder(context).setTitle(t("my_backgrounds")).setView(scroll).setNegativeButton(t("cancel"),null).create()
@@ -24,6 +24,11 @@ object BackgroundLibraryDialog {
                         .setNegativeButton(t("cancel"),null).setPositiveButton(t("apply_design")){_,_->library.touch(entry.file);apply(entry.file.absolutePath);dialog.dismiss()}.show()
                 }
                 StudioUi.button(context,card,t("favorite")){library.favorite(entry);render()}
+                if(!entry.file.name.startsWith("scene-premium-"))StudioUi.button(context,card,t("delete_design")){
+                    MaterialAlertDialogBuilder(context).setTitle(t("delete_design")).setMessage(entry.name).setNegativeButton(t("cancel"),null).setPositiveButton(t("delete_design")){_,_->
+                        if(library.delete(entry,current))render()else Toast.makeText(context,t("background_in_use"),Toast.LENGTH_LONG).show()
+                    }.show()
+                }
                 StudioUi.button(context,card,t("rename")){
                     val input=EditText(context).apply{setText(entry.name)}
                     MaterialAlertDialogBuilder(context).setTitle(t("rename")).setView(input).setNegativeButton(t("cancel"),null)

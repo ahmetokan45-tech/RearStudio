@@ -27,7 +27,7 @@ object ActivityData:SensorEventListener {
   if(listening)return true
   context=c.applicationContext;manager=c.getSystemService(SensorManager::class.java)
   val sensor=manager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)?:return false
-  listening=manager?.registerListener(this,sensor,SensorManager.SENSOR_DELAY_NORMAL)==true
+  listening=runCatching{manager?.registerListener(this,sensor,SensorManager.SENSOR_DELAY_NORMAL)==true}.getOrDefault(false)
   return listening
  }
  fun stop(){manager?.unregisterListener(this);listening=false}

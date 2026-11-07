@@ -46,4 +46,8 @@
     <string name="s_rotation_widget">Dönen widget</string>
     <string name="s_auto_rotate">İçerikleri otomatik değiştir</string>
     <string name="s_rotation_slides">İçerikler ve süreler</string>
+    <string name="s_background_in_use">Bu resim etkin, kayıtlı veya kurtarma tasarımında kullanılıyor.</string>
+    <string name="s_fade_in">Belirme (ms)</string>
+    <string name="s_fade_out">Sönme (ms)</string>
+<string name="s_elements">Öğeler</string>
 </resources>

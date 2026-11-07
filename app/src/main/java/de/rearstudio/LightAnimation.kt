@@ -15,7 +15,11 @@ data class LightAnimation(
     val fadeMs: Long = 400,
     val repeats: Int = 0,
     val clockwise: Boolean = true,
-    val enabled: Boolean = false
+    val enabled: Boolean = false,
+    val fadeInMs: Long = fadeMs,
+    val fadeOutMs: Long = fadeMs,
+    val glow: Int = 0,
+    val thickness: Int = 9
 ) {
     data class Frame(val alpha: Float, val phase: Float)
     fun frame(elapsedMs: Long, reducedMotion: Boolean = false): Frame {
@@ -31,18 +35,22 @@ data class LightAnimation(
             effect == "blink" -> if (phase < .5f) 1f else 0f
             else -> 1f
         }
-        val fade = fadeMs.coerceAtLeast(0)
+        val fade = fadeInMs.coerceAtLeast(0)
+        val fadeOut = fadeOutMs.coerceAtLeast(0)
         val inAlpha = if (fade == 0L) 1f else (elapsed.toFloat()/fade).coerceIn(0f,1f)
-        val outAlpha = if (fade == 0L || total == Long.MAX_VALUE) 1f else ((total-elapsed).toFloat()/fade).coerceIn(0f,1f)
+        val outAlpha = if (fadeOut == 0L || total == Long.MAX_VALUE) 1f else ((total-elapsed).toFloat()/fadeOut).coerceIn(0f,1f)
         return Frame(brightness.coerceIn(0,100)/100f*wave*inAlpha*outAlpha, if(reducedMotion)0f else if(clockwise)phase else 1f-phase)
     }
     fun json()=JSONObject().put("effect",effect).put("palette",palette).put("color",color).put("color2",color2)
         .put("brightness",brightness).put("periodMs",periodMs).put("delayMs",delayMs).put("fadeMs",fadeMs)
         .put("repeats",repeats).put("clockwise",clockwise).put("enabled",enabled)
+        .put("fadeInMs",fadeInMs).put("fadeOutMs",fadeOutMs).put("glow",glow).put("thickness",thickness)
     companion object {
         fun read(o:JSONObject)=LightAnimation(o.optString("effect","static"),o.optString("palette","classic"),
             o.optInt("color",0xfffd9b02.toInt()),o.optInt("color2",0xff91092d.toInt()),o.optInt("brightness",60).coerceIn(0,100),
             o.optLong("periodMs",2400).coerceIn(250,60_000),o.optLong("delayMs",0).coerceIn(0,60_000),o.optLong("fadeMs",400).coerceIn(0,10_000),
-            o.optInt("repeats",0).coerceIn(0,1000),o.optBoolean("clockwise",true),o.optBoolean("enabled",false))
+            o.optInt("repeats",0).coerceIn(0,1000),o.optBoolean("clockwise",true),o.optBoolean("enabled",false),
+            o.optLong("fadeInMs",o.optLong("fadeMs",400)).coerceIn(0,10000),o.optLong("fadeOutMs",o.optLong("fadeMs",400)).coerceIn(0,10000),
+            o.optInt("glow",0).coerceIn(0,100),o.optInt("thickness",9).coerceIn(1,30))
     }
 }

@@ -19,6 +19,10 @@ class LightAnimationTest {
         assertEquals(0f,a.frame(1800,true).phase,0f)
         assertEquals(0f,a.copy(enabled=false).frame(1800).alpha,0f)
     }
+    @Test fun independentFadesAndGlowRoundTrip(){
+        val a=LightAnimation(enabled=true,brightness=100,periodMs=1000,repeats=2,fadeInMs=100,fadeOutMs=400,glow=30,thickness=12)
+        assertEquals(.5f,a.frame(50).alpha,.001f);assertEquals(.5f,a.frame(1800).alpha,.001f);assertEquals(a,LightAnimation.read(a.json()))
+    }
     @Test fun optionsRoundTripAndBadInputsAreBounded() {
         val a=LightAnimation(enabled=true,effect="chase",palette="dual",clockwise=false,delayMs=100)
         assertEquals(a,LightAnimation.read(a.json()))

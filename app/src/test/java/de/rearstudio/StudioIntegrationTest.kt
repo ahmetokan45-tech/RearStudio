@@ -34,7 +34,8 @@ class StudioIntegrationTest {
                     (if (view is ViewGroup) (0 until view.childCount).flatMap { texts(view.getChildAt(it)) } else emptyList())
                 val values = texts(activity.window.decorView)
                 assertTrue(values.any{it.contains("AHM3T45")})
-                assertTrue(values.contains(StudioUi.text(activity,"edit_design")))
+                fun hasCompose(view:View):Boolean=view is androidx.compose.ui.platform.ComposeView || (view is ViewGroup && (0 until view.childCount).any{hasCompose(view.getChildAt(it))})
+                assertTrue(hasCompose(activity.window.decorView))
             }
         }
     }

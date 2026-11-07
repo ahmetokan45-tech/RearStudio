@@ -46,4 +46,8 @@
     <string name="s_rotation_widget">Rotating widget</string>
     <string name="s_auto_rotate">Automatic slide rotation</string>
     <string name="s_rotation_slides">Slides and durations</string>
+    <string name="s_background_in_use">This image is used by an active, saved or recovery design.</string>
+    <string name="s_fade_in">Fade in (ms)</string>
+    <string name="s_fade_out">Fade out (ms)</string>
+<string name="s_elements">Elements</string>
 </resources>

@@ -5,7 +5,34 @@ Baseline `studio-v4-geometry` and the original application ID remain unchanged.
 Debug builds use `de.rearstudio.v56dev`, label `AHM3T45 V5.6 Test`. Do not run both
 apps' rear-display services concurrently. No existing installation is uninstalled.
 
-## Implemented in this development increment
+## Additional implementation on 2026-11-07 (validation of latest commit pending)
+
+- Compose home action grid integrated with the existing native renderer/editor.
+- Portable ZIP design export/import with embedded private images; imported geometry
+  is discarded in favour of this device calibration. Archive bounds/path/image validation.
+- 2–8 sorted gradient stops, angle, rotating gradient animation, reduced-motion gate.
+- Rear favourite selector: opt-in long press, detached preview, previous/next,
+  explicit confirm/cancel, background-only mode, at most 10 favourites. Hardware unverified;
+  not yet the fully animated carousel from the reference.
+- Native cumulative step sensor with permission, observed daily totals and seven-day
+  chart; Titanium, translucent and gradient cards; goal and component visibility.
+  Only observed counts are claimed, not Xiaomi Health historical totals or workouts.
+- Open-Meteo current weather with explicit coordinate opt-in, HTTPS bounds, cache,
+  timestamps, condition labels and attribution. No GPS; no multi-day forecast yet.
+  Public API use is development-only; commercial endpoint agreement remains needed.
+- Twelve real OFL font families bundled with license texts; global widget font/bold/italic
+  and separate clock hour/minute/second colours. Arial is blocked by missing redistribution
+  rights and is not silently substituted. Per-clock-part fonts still incomplete.
+- Rotating widget with up to eight content slides, independent durations, auto/manual
+  mode, and local horizontal swipes taking priority over global Smart View navigation.
+- Ten original offline abstract background variants, shipped as native drawable sources
+  and converted to separate PNG originals on first library use; not pixel-matched to concepts.
+- Background deletion checks active design, draft, preview, recovery and saved designs.
+- Independent camera-light fade-in/fade-out, glow and thickness.
+- GitHub prerelease publication runs only after build/test/lint/signature checks succeed.
+
+## Earlier implementation (retained)
+
 
 - Native Kotlin editor on the existing Android Views/Canvas renderer (the repository
   did not contain Compose). Shared preview/rear rendering remains intact.
@@ -35,21 +62,17 @@ apps' rear-display services concurrently. No existing installation is uninstalle
 
 ## Remaining implementation (not claimed complete)
 
-- Jetpack Compose integration, fully modular premium Activity Pro/Weather Pro and
-  live weather/step providers; current activity/weather views explicitly say the
-  source is not connected, never show fabricated live values.
-- Ten separate licensed premium background files; image blur/filter presets,
-  export/import, deletion with reference tracking, grid/single-preview switch.
-- Complete 13-font licensed bundle, per-clock-part typography, advanced modular
-  music/cover filters, visibility rules, grouped editing and multi-touch transform.
-- Gradient 2–8-stop editor, keyframe timeline, blend modes and animation export.
-- Smart Rotation Widget, mini-gesture arbitration, hardware long-press design
-  switcher with animated favorite carousel. Current saved-design switch is app-only.
-- Per-app notification styles, independently positioned notification subcomponents,
-  stacking/event arbitration, side-by-side animated lighting comparison, additional
-  transition effects, independent glow and fade-in/fade-out settings.
-- Fully implemented hardware diagnosis, timed live-test rollback, guaranteed Xiaomi
-  original-mode return, verified display-off behavior, full accessibility/localization.
+- Full premium reference fidelity and individually movable Activity/Weather/music
+  subcomponents, multi-day weather, health history, workout/distance/calorie modules.
+- Arial redistribution license; per-clock-part font/weight and complete text spacing/alignment.
+- Background blur/filter presets and grid/single preview; premium visual review against references.
+- Grouping, multi-touch transforms, 2–8-stop keyframe timeline, blend modes and animation export.
+- Animated favourite carousel, mini-gesture acceptance on hardware.
+- Per-app notification card settings, stacking/priority, independently positioned card
+  parts, side-by-side light comparison and additional transitions.
+- Full nine-language localization and accessibility. New controls currently EN/DE/TR only.
+- Hardware diagnosis, timed rollback, original Xiaomi-mode return, display-off/reboot,
+  Shizuku disconnect, exact calibration, battery/thermal and device acceptance.
 
 ## Exact reference and geometry
 
@@ -68,7 +91,7 @@ GitHub Actions is the build/test environment. Baseline commit `6c535bb` passed.
 First increment: 293 tests, 1 failure in geometry provenance copying; fixed.
 Second increment: 300 tests, 1 fixture failure after adding default Smart View content;
 fixed by explicitly clearing the default content before constructing the test fixture.
-Final verified run: **306 tests passed, 0 test failures; build passed; lint 0 errors,
+Earlier verified run: **306 tests passed, 0 test failures; build passed; lint 0 errors,
 382 warnings and 1 hint; APK signature/manifest/archive/hash verified**.
 Exact commit and APK evidence: [V56_VALIDATION.md](V56_VALIDATION.md).
 No Android emulator or Xiaomi device tests have been performed in this environment.

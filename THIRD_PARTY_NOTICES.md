@@ -36,3 +36,11 @@ substituted and labelled as Arial.
 Open-Meteo weather data: https://open-meteo.com/ — CC BY 4.0 attribution is shown in
 the widget. The public API is used for this non-commercial development build only.
 A commercial service agreement / production endpoint is required before a paid release.
+
+## Original offline backgrounds
+
+The ten premium_*.xml Android vector/layer assets are original Rear Studio source
+artwork, covered by this repository license. They are rasterized into independent
+private PNG originals on first library use. They contain no copied camera outline,
+photograph, club crest or third-party illustration. The GS palette uses colours only.
+These are initial abstract variants, not a claim to reproduce the master concept images.

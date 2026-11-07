@@ -125,7 +125,10 @@ class EditorActivity:AppCompatActivity(){
             slider(light,"brightness",p.cameraLight.brightness,0,100){p.cameraLight=p.cameraLight.copy(brightness=it)}
             slider(light,"period_ms",p.cameraLight.periodMs.toInt(),250,10000){p.cameraLight=p.cameraLight.copy(periodMs=it.toLong())}
             slider(light,"delay_ms",p.cameraLight.delayMs.toInt(),0,10000){p.cameraLight=p.cameraLight.copy(delayMs=it.toLong())}
-            slider(light,"fade_ms",p.cameraLight.fadeMs.toInt(),0,5000){p.cameraLight=p.cameraLight.copy(fadeMs=it.toLong())}
+            slider(light,"fade_in",p.cameraLight.fadeInMs.toInt(),0,5000){p.cameraLight=p.cameraLight.copy(fadeInMs=it.toLong())}
+            slider(light,"fade_out",p.cameraLight.fadeOutMs.toInt(),0,5000){p.cameraLight=p.cameraLight.copy(fadeOutMs=it.toLong())}
+            slider(light,"glow",p.cameraLight.glow,0,100){p.cameraLight=p.cameraLight.copy(glow=it)}
+            slider(light,"thickness",p.cameraLight.thickness,1,30){p.cameraLight=p.cameraLight.copy(thickness=it)}
             slider(light,"repeats",p.cameraLight.repeats,0,20){p.cameraLight=p.cameraLight.copy(repeats=it)}
             switch(light,"clockwise",p.cameraLight.clockwise){p.cameraLight=p.cameraLight.copy(clockwise=it)}
             StudioUi.button(this,light,t(if(canvas.previewPlaying)"pause_preview" else "play_preview")){canvas.playback(!canvas.previewPlaying);controls()}
@@ -227,7 +230,7 @@ class EditorActivity:AppCompatActivity(){
         }};render();dialog.show()
     }
     private fun addWidget(){val sheet=BottomSheetDialog(this);val box=StudioUi.column(this).apply{setPadding(24,24,24,32)};box.addView(StudioUi.label(this,t("add_widget"),22f));listOf("clock","date","battery","music","activity","weather","rotation_widget","football","f1","notification","gradient","text").forEach{kind->StudioUi.button(this,box,t(kind)){val p=scene.profile(profile);if(kind=="clock"&&p.widgets.any{it.kind=="clock"}){toast("one_clock");return@button};if(p.widgets.size>=128){toast("widget_limit");return@button};remember();val w=StudioWidget(kind=kind,y=.25f,h=if(kind=="music").6f else .32f,color=scene.accent);p.widgets.add(w);selected=w.id;changed();controls();sheet.dismiss()}};sheet.setContentView(box);sheet.show()}
-    private fun background(){val p=scene.profile(profile);val box=StudioUi.column(this);val types=listOf("gradient","solid","photo","gallery");choice(box,"background",types,types.indexOf(p.background).coerceAtLeast(0)){p.background=types[it]};color(box,"color",p.color){p.color=it};color(box,"second_color",p.color2){p.color2=it};slider(box,"dimming",p.dim,0,90){p.dim=it};StudioUi.button(this,box,t("choose_photo")){photo.launch(arrayOf("image/*"))};StudioUi.button(this,box,t("my_backgrounds")){BackgroundLibraryDialog.show(this){path->remember();p.photo=path;p.background="photo";p.imageOptions=org.json.JSONObject();changed();canvas.refresh()}};
+    private fun background(){val p=scene.profile(profile);val box=StudioUi.column(this);val types=listOf("gradient","solid","photo","gallery");choice(box,"background",types,types.indexOf(p.background).coerceAtLeast(0)){p.background=types[it]};color(box,"color",p.color){p.color=it};color(box,"second_color",p.color2){p.color2=it};slider(box,"dimming",p.dim,0,90){p.dim=it};StudioUi.button(this,box,t("choose_photo")){photo.launch(arrayOf("image/*"))};StudioUi.button(this,box,t("my_backgrounds")){BackgroundLibraryDialog.show(this,scene){path->remember();p.photo=path;p.background="photo";p.imageOptions=org.json.JSONObject();changed();canvas.refresh()}};
         slider(box,"image_scale",p.imageOptions.optInt("scale",100),100,300){p.imageOptions.put("scale",it)}
         slider(box,"image_pan_x",p.imageOptions.optInt("panX",0),-100,100){p.imageOptions.put("panX",it)}
         slider(box,"image_pan_y",p.imageOptions.optInt("panY",0),-100,100){p.imageOptions.put("panY",it)}
