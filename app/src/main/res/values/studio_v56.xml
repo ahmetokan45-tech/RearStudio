@@ -27,4 +27,45 @@
     <string name="s_linear">Linear</string>
     <string name="s_radial">Radial</string>
     <string name="s_sweep">Conical</string>
+    <string name="s_camera_light">Camera lighting · experimental</string>
+    <string name="s_camera_calibration_required">Requires two measured camera lenses. Calibrate geometry first.</string>
+    <string name="s_light_enabled">Enable camera light</string>
+    <string name="s_static">Static</string>
+    <string name="s_pulse">Pulse</string>
+    <string name="s_blink">Blink</string>
+    <string name="s_wave">Wave</string>
+    <string name="s_chase">Chase</string>
+    <string name="s_classic">Classic</string>
+    <string name="s_dual">Dual color</string>
+    <string name="s_brightness">Brightness</string>
+    <string name="s_period_ms">Cycle (ms)</string>
+    <string name="s_delay_ms">Start delay (ms)</string>
+    <string name="s_fade_ms">Fade in/out (ms)</string>
+    <string name="s_repeats">Repeats · 0 = continuous</string>
+    <string name="s_clockwise">Clockwise</string>
+    <string name="s_pause_preview">Pause preview</string>
+    <string name="s_play_preview">Play preview</string>
+    <string name="s_restart_preview">Restart preview</string>
+    <string name="s_compact">Compact</string>
+    <string name="s_card">Card</string>
+    <string name="s_liquid">Liquid Glass</string>
+    <string name="s_smart_views">Smart Views</string>
+    <string name="s_smart_music">Music player</string>
+    <string name="s_smart_notifications">Notifications</string>
+    <string name="s_smart_weather">Weather · data source pending</string>
+    <string name="s_smart_activity">Activity · data source pending</string>
+    <string name="s_data_source_unverified">Data source not connected yet</string>
+    <string name="s_gestures_experimental">Rear-display gestures are not device-verified. X remains visible to close.</string>
+    <string name="s_close_gesture">Close gesture</string>
+    <string name="s_idle_timeout">Inactivity (s) · 0 = off</string>
+    <string name="s_simulate_smart_view">Test Smart View in preview</string>
+    <string name="s_swipe_up">Swipe up</string>
+    <string name="s_swipe_down">Swipe down</string>
+    <string name="s_swipe_left">Swipe left</string>
+    <string name="s_swipe_right">Swipe right</string>
+    <string name="s_none">No action</string>
+    <string name="s_UP">Up</string>
+    <string name="s_DOWN">Down</string>
+    <string name="s_LEFT">Left</string>
+    <string name="s_RIGHT">Right</string>
 </resources>

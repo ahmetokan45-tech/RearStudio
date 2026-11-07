@@ -25,6 +25,20 @@ class StudioCanvas(c:Context):View(c){
     var scene=StudioScene.load(c);var editing=false;var forcedProfile:String?="normal";var selected:String?=null
     var onSelect:((StudioWidget?)->Unit)?=null;var onBeforeChange:(()->Unit)?=null;var onChanged:(()->Unit)?=null;var onDelete:((String)->Unit)?=null
     var onFrame:(()->Unit)?=null
+    val smartViews=SmartViews()
+    private var touchStartX=0f;private var touchStartY=0f
+    fun openSmartView(name:String){smartViews.open(name,android.os.SystemClock.elapsedRealtime());refresh()}
+
+    var previewPlaying=true
+    private var animationStarted=android.os.SystemClock.elapsedRealtime()
+    private var pausedAt=0L
+    fun playback(playing:Boolean){
+        if(playing==previewPlaying)return
+        val now=android.os.SystemClock.elapsedRealtime()
+        if(playing)animationStarted+=now-pausedAt else pausedAt=now
+        previewPlaying=playing;invalidate()
+    }
+    fun restartAnimation(){animationStarted=android.os.SystemClock.elapsedRealtime();pausedAt=animationStarted;invalidate()}
     var cameraGuides=false;var demoLevel:Int?=null;var animateUntil=0L
     private var detectedGeometry=DisplayGeometry.detect(c)
     fun geometry()=scene.geometry?:detectedGeometry
@@ -34,11 +48,11 @@ class StudioCanvas(c:Context):View(c){
     private var artwork:Bitmap?=null;private var song="";private var artist="";private var media:android.media.session.MediaController?=null
     private var image:Drawable?=null;private var imageKey="";private val imageLoader=java.util.concurrent.Executors.newSingleThreadExecutor();private var attached=false;private var loaded=false
     private val tick=object:Runnable{override fun run(){if(!attached)return;update();handler.postDelayed(this,1000)}}
-    fun profileKey():String {forcedProfile?.let{return it};val sp=context.getSharedPreferences("studio",0);if(sp.contains("preview")&&System.currentTimeMillis()-sp.getLong("preview_time",0)<15_000)sp.getString("preview_profile",null)?.let{return it};val now=System.currentTimeMillis();val note=RearNotificationListener.recent().firstOrNull();val np=scene.profile("notification");if(note!=null&&np.enabled&&np.popup&&now>=note.postedAt&&(np.duration==0||now-note.postedAt<=np.duration*1000L))return "notification";return if(charging&&scene.profile("charging").enabled&&(scene.profile("charging").duration==0||now-pluggedAt<scene.profile("charging").duration*1000L))"charging" else "normal"}
+    fun profileKey():String {if(!editing)smartViews.opened?.let{return it};forcedProfile?.let{return it};val sp=context.getSharedPreferences("studio",0);if(sp.contains("preview")&&System.currentTimeMillis()-sp.getLong("preview_time",0)<15_000)sp.getString("preview_profile",null)?.let{return it};val now=System.currentTimeMillis();val note=RearNotificationListener.recent().firstOrNull();val np=scene.profile("notification");if(note!=null&&np.enabled&&np.popup&&now>=note.postedAt&&(np.duration==0||now-note.postedAt<=np.duration*1000L))return "notification";return if(charging&&scene.profile("charging").enabled&&(scene.profile("charging").duration==0||now-pluggedAt<scene.profile("charging").duration*1000L))"charging" else "normal"}
     fun profile()=scene.profile(profileKey())
     private fun shownProfile()=if(profileKey()=="charging"&&profile().reuseNormal)scene.profile("normal") else profile()
     fun refresh(){detectedGeometry=DisplayGeometry.detect(context);update()}
-    private fun update(){if(forcedProfile==null)scene=StudioScene.load(context,true)
+    private fun update(){smartViews.expire(android.os.SystemClock.elapsedRealtime(),scene.navigation.optInt("timeout",30));if(forcedProfile==null)scene=StudioScene.load(context,true)
         val b=context.registerReceiver(null,IntentFilter(Intent.ACTION_BATTERY_CHANGED));val before=charging
         battery=((b?.getIntExtra(BatteryManager.EXTRA_LEVEL,0)?:0)*100/(b?.getIntExtra(BatteryManager.EXTRA_SCALE,100)?:100).coerceAtLeast(1)).coerceIn(0,100)
         charging=(b?.getIntExtra(BatteryManager.EXTRA_PLUGGED,0)?:0)!=0;if(charging&&!before){pluggedAt=System.currentTimeMillis();if(scene.profile("charging").animation)animateUntil=pluggedAt+(scene.profile("charging").duration.takeIf{it>0}?.times(1000L)?:3000L)}
@@ -49,7 +63,7 @@ class StudioCanvas(c:Context):View(c){
         invalidate();onFrame?.invoke()
     }
     override fun onAttachedToWindow(){super.onAttachedToWindow();attached=true;handler.post(tick)}
-    override fun onDetachedFromWindow(){attached=false;handler.removeCallbacks(tick);(image as? AnimatedImageDrawable)?.stop();image?.callback=null;imageKey="";image=null;super.onDetachedFromWindow()}
+    override fun onDetachedFromWindow(){smartViews.close();attached=false;handler.removeCallbacks(tick);(image as? AnimatedImageDrawable)?.stop();image?.callback=null;imageKey="";image=null;super.onDetachedFromWindow()}
     fun dispose(){imageLoader.shutdownNow()}
     override fun verifyDrawable(who:Drawable)=who===image||super.verifyDrawable(who)
     private fun hit(w:StudioWidget,x:Float,y:Float):Boolean {
@@ -68,6 +82,7 @@ class StudioCanvas(c:Context):View(c){
         if(profile.enabled||editing)for(w in shown.widgets){if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save();canvas.rotate(w.rotation,r.centerX(),r.centerY());canvas.saveLayerAlpha(r,if(w.enabled)w.opacity*255/100 else 50)
             val ink=w.color;val pad=height*.035f;val content=r.width()-2*pad
             when(w.kind){
+                "unavailable"->text(canvas,StudioUi.text(context,"data_source_unverified"),r.left,r.centerY(),base*.42f,ink,r.width())
                 "text"->text(canvas,w.options.optString("text","Text"),r.left,r.centerY()+r.height()*.2f,r.height()*.6f,ink,r.width())
                 "gradient"->{val colors=intArrayOf(ink,w.options.optInt("color2",scene.accent));p.shader=when(w.style){"radial"->RadialGradient(r.centerX(),r.centerY(),maxOf(r.width(),r.height())/2,colors,null,Shader.TileMode.CLAMP);"sweep"->SweepGradient(r.centerX(),r.centerY(),colors,null);else->LinearGradient(r.left,r.top,r.right,r.bottom,colors,null,Shader.TileMode.CLAMP)};p.style=Paint.Style.FILL;p.alpha=255;canvas.drawRect(r,p);p.shader=null}
 
@@ -76,7 +91,13 @@ class StudioCanvas(c:Context):View(c){
                 "battery"->{if(!(key=="charging"&&profile.chargeEnabled&&profile.chargeStyle in listOf("ring","bar","minimal"))) {round(canvas,r,0xcc282a34.toInt());text(canvas,if(key=="charging"&&!profile.percentage)"ϟ"else "${if(charging)"ϟ " else ""}$level%",r.left+pad,r.centerY()+base*.3f,min(base,r.height()*.6f),ink,content)}}
                 "music"->{round(canvas,r,0xff323043.toInt());artwork?.let{val saved=canvas.save();canvas.clipRoundRectCompat(r,height*.04f);canvas.drawBitmap(it,null,r,p.apply{shader=null;alpha=170;style=Paint.Style.FILL});canvas.restoreToCount(saved);p.alpha=255};round(canvas,r,0x55000000);text(canvas,song.ifBlank{StudioUi.text(context,if(MediaHub.granted(context))"start_player" else "music_access")},r.left+pad,r.top+r.height()*.35f,min(base*.7f,r.height()*.18f),Color.WHITE,content);text(canvas,artist,r.left+pad,r.top+r.height()*.54f,base*.43f,0xffdedbe6.toInt(),content);val yy=r.top+r.height()*.8f;for(i in 0..2){val xx=r.left+r.width()*(.23f+i*.27f);text(canvas,listOf("‹",if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)"Ⅱ" else "▶","›")[i],xx,yy,base*.8f,Color.WHITE,r.width()*.2f,align=Paint.Align.CENTER)}}
                 "football","f1"->{round(canvas,r,0xf0282832.toInt());p.color=ink;canvas.drawRoundRect(RectF(r.left,r.top,r.left+height*.012f,r.bottom),height*.006f,height*.006f,p);val raw=context.getSharedPreferences("sport",0).getString(if(w.kind=="football")"latest_football" else "latest_f1-results",null);if(raw==null){text(canvas,StudioUi.text(context,"load_results"),r.left+pad,r.centerY(),base*.5f,ink,content)}else{val lines=raw.lines().filter{it.isNotBlank()};if(w.kind=="football"&&lines.size>=3){val score=lines[1];text(canvas,lines[0].take(3).uppercase(),r.left+pad,r.top+r.height()*.46f,base*.5f,ink,r.width()*.22f);text(canvas,score,r.centerX(),r.top+r.height()*.48f,base*.9f,Color.WHITE,r.width()*.43f,align=Paint.Align.CENTER);text(canvas,lines[2].take(3).uppercase(),r.right-pad,r.top+r.height()*.46f,base*.5f,ink,r.width()*.22f,align=Paint.Align.RIGHT);text(canvas,lines.getOrNull(3)?:StudioUi.text(context,"published"),r.left+pad,r.bottom-pad,base*.34f,0xffbdbec8.toInt(),content)}else{val allDrivers=lines.filter{it.matches(Regex("^[0-9A-Z]+\\. .+"))};val favorite=context.getSharedPreferences("sport",0).getString("f1_favorite","")?:"";val drivers=if(favorite.isBlank())allDrivers else allDrivers.filter{it.substringAfter(". ")==favorite}.ifEmpty{allDrivers};text(canvas,drivers.firstOrNull()?:lines.first(),r.left+pad,r.top+r.height()*.46f,base*.65f,Color.WHITE,content);text(canvas,lines.first()+" · "+StudioUi.text(context,"published"),r.left+pad,r.bottom-pad,base*.34f,ink,content)}}}
-                "notification"->{round(canvas,r,0xf02b2d38.toInt());val note=RearNotificationListener.recent().firstOrNull();val locked=context.getSystemService(android.app.KeyguardManager::class.java).isKeyguardLocked;val formatted=note?.let{NotificationFormatter.format(it,NotificationSettings.style(context),locked,NotificationAccess.lockScreen(context))};text(canvas,formatted?.appName?:StudioUi.text(context,"notifications"),r.left+pad,r.top+r.height()*.32f,base*.4f,ink,content);text(canvas,formatted?.title?:StudioUi.text(context,"no_notifications"),r.left+pad,r.top+r.height()*.62f,base*.56f,Color.WHITE,content);formatted?.text?.let{text(canvas,it,r.left+pad,r.bottom-pad,base*.4f,0xffbebfc9.toInt(),content)}}
+                "notification"->{
+                    when(w.style){
+                        "minimal"->{}
+                        "liquid"->round(canvas,r,0x552b2d38)
+                        "gradient"->{p.shader=LinearGradient(r.left,r.top,r.right,r.bottom,intArrayOf(0xf0191b23.toInt(),w.color),null,Shader.TileMode.CLAMP);p.style=Paint.Style.FILL;p.alpha=255;canvas.drawRoundRect(r,height*.04f,height*.04f,p);p.shader=null}
+                        else->round(canvas,r,0xf02b2d38.toInt())
+                    };val note=RearNotificationListener.recent().firstOrNull();val locked=context.getSystemService(android.app.KeyguardManager::class.java).isKeyguardLocked;val formatted=note?.let{NotificationFormatter.format(it,NotificationSettings.style(context),locked,NotificationAccess.lockScreen(context))};text(canvas,formatted?.appName?:StudioUi.text(context,"notifications"),r.left+pad,r.top+r.height()*.32f,base*.4f,ink,content);text(canvas,formatted?.title?:StudioUi.text(context,"no_notifications"),r.left+pad,r.top+r.height()*.62f,base*.56f,Color.WHITE,content);formatted?.text?.takeIf{w.style!="compact"&&w.style!="minimal"}?.let{text(canvas,it,r.left+pad,r.bottom-pad,base*.4f,0xffbebfc9.toInt(),content)}}
             };canvas.restore();canvas.restore()
             if(editing&&w.id==selected){p.apply{color=scene.accent;style=Paint.Style.STROKE;strokeWidth=2f};canvas.drawRoundRect(r,10f,10f,p);p.style=Paint.Style.FILL;canvas.drawCircle(r.right,r.top,14f*scale,p);canvas.drawCircle(r.right,r.bottom,12f*scale,p);text(canvas,"×",r.right,r.top+8f*scale,28f*scale,StudioUi.BG,40f*scale,align=Paint.Align.CENTER)}
         }
@@ -90,11 +111,25 @@ class StudioCanvas(c:Context):View(c){
         if(editing&&key=="charging"&&profile.chargeEnabled&&profile.chargeStyle=="edge"){
             val x=width-height*.045f;val y=height*.045f;p.shader=null;p.color=scene.accent;p.style=Paint.Style.FILL;canvas.drawCircle(x,y,height*.04f,p);text(canvas,"×",x,y+height*.02f,height*.07f,StudioUi.BG,height*.1f,align=Paint.Align.CENTER)
         }
+        if(!editing&&smartViews.opened!=null){
+            val close=RectF(width-height*.15f,0f,width.toFloat(),height*.15f)
+            round(canvas,close,0xdd151720.toInt());text(canvas,"×",close.centerX(),close.centerY()+height*.025f,height*.08f,Color.WHITE,close.width(),align=Paint.Align.CENTER)
+        }
+        val reducedMotion=context.getSystemService(android.os.PowerManager::class.java)?.isPowerSaveMode==true||!android.animation.ValueAnimator.areAnimatorsEnabled()
+        val time=(if(previewPlaying)android.os.SystemClock.elapsedRealtime() else pausedAt)-animationStarted
+        CameraLightRenderer.draw(canvas,geometry(),width,height,profile.cameraLight,time,reducedMotion)
+        if(profile.cameraLight.enabled&&geometry().lenses.size==2&&previewPlaying&&!reducedMotion&&isShown&&windowVisibility==VISIBLE&&profile.cameraLight.effect!="static")postInvalidateDelayed(33)
         if(cameraGuides){p.shader=null;p.color=0x55777788;p.style=Paint.Style.STROKE;p.strokeWidth=1f;val g=geometry();for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.drawOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),p)};p.style=Paint.Style.FILL}
         canvas.restore()
     }
     override fun onTouchEvent(event:MotionEvent):Boolean {val ws=shownProfile().widgets;val x=event.x;val y=event.y
-        if(!editing){if(event.action==MotionEvent.ACTION_UP){val w=ws.lastOrNull{it.enabled&&hit(it,x,y)}?:return false;if(w.kind=="notification"){RearNotificationListener.recent().firstOrNull()?.let{NotificationOpen.open(context,it.key)};return true};if(w.kind=="music"){val r=rect(w);if(y>r.top+r.height()*.6f){try{val controls=media?.transportControls;when(((x-r.left)/r.width()*3).toInt().coerceIn(0,2)){0->controls?.skipToPrevious();1->if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)controls?.pause() else controls?.play();2->controls?.skipToNext()}}catch(_:RuntimeException){};invalidate();return true}}};return true}
+        if(!editing){
+            if(event.actionMasked==MotionEvent.ACTION_DOWN){touchStartX=x;touchStartY=y;smartViews.interact(android.os.SystemClock.elapsedRealtime());return true}
+            if(event.actionMasked==MotionEvent.ACTION_UP){
+                val direction=SmartViews.direction(x-touchStartX,y-touchStartY,StudioUi.dp(context,48).toFloat())
+                if(direction!=null){smartViews.swipe(direction,scene.navigation,android.os.SystemClock.elapsedRealtime());refresh();performClick();return true}
+                if(smartViews.opened!=null&&x>width-height*.15f&&y<height*.15f){smartViews.close();refresh();performClick();return true}
+val w=ws.lastOrNull{it.enabled&&hit(it,x,y)}?:return false;if(w.kind=="notification"){RearNotificationListener.recent().firstOrNull()?.let{NotificationOpen.open(context,it.key)};return true};if(w.kind=="music"){val r=rect(w);if(y>r.top+r.height()*.6f){try{val controls=media?.transportControls;when(((x-r.left)/r.width()*3).toInt().coerceIn(0,2)){0->controls?.skipToPrevious();1->if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)controls?.pause() else controls?.play();2->controls?.skipToNext()}}catch(_:RuntimeException){};invalidate();return true}}};return true}
         when(event.actionMasked){MotionEvent.ACTION_DOWN->{if(profileKey()=="charging"&&profile().chargeEnabled&&profile().chargeStyle=="edge"&&hypot(x-(width-height*.045f),y-height*.045f)<StudioUi.dp(context,18)){onBeforeChange?.invoke();profile().chargeEnabled=false;onChanged?.invoke();invalidate();return true};val current=ws.find{it.id==selected};val tolerance=StudioUi.dp(context,18).toFloat();if(current!=null&&!current.locked){val r=rect(current);if(hypot(x-r.right,y-r.top)<tolerance){onDelete?.invoke(current.id);return true};resize=hypot(x-r.right,y-r.bottom)<tolerance}
             val target=if(resize)current else ws.asReversed().firstOrNull{hit(it,x,y)};selected=target?.id;onSelect?.invoke(target);if(target==null||target.locked){invalidate();return true};onBeforeChange?.invoke();drag=target.id;dx=x;dy=y;oldX=target.x;oldY=target.y;oldW=target.w;oldH=target.h;moved=false;parent?.requestDisallowInterceptTouchEvent(true);invalidate()}
             MotionEvent.ACTION_MOVE->{val w=ws.find{it.id==drag}?:return true;val xx=(x-dx)/width;val yy=(y-dy)/height;if(resize){w.w=oldW+xx;w.h=oldH+yy}else{w.x=oldX+xx;w.y=oldY+yy};w.constrain();moved=true;invalidate()}

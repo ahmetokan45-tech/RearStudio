@@ -49,6 +49,7 @@ class DesignLibrary(context: Context) {
         fun compose(current: StudioScene, candidate: StudioScene, backgroundOnly: Boolean): StudioScene {
             if (!backgroundOnly) return candidate.copy().also { it.geometry = current.geometry }
             return current.copy().apply {
+                geometry = current.geometry
                 for ((key, profile) in profiles) {
                     val source = candidate.profiles[key] ?: candidate.profile("normal")
                     profile.background = source.background; profile.photo = source.photo

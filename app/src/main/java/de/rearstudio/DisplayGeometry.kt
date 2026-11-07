@@ -52,7 +52,7 @@ data class DisplayGeometry(
                 List(4){c.getDouble(it).toFloat()}, List(l.length()){
                     val lens=l.getJSONObject(it)
                     LensCircle(lens.getDouble("x").toFloat(),lens.getDouble("y").toFloat(),lens.getDouble("radius").toFloat())
-                }, "geometry_custom")
+                }, o.optString("source","geometry_custom"))
         }
 
         fun detect(context: Context): DisplayGeometry {
