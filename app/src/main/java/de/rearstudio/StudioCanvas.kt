@@ -95,6 +95,7 @@ class StudioCanvas(c:Context):View(c){
     private fun text(canvas:Canvas,value:String,x:Float,y:Float,size:Float,color:Int,maxWidth:Float=width.toFloat(),font:String="sans-serif",align:Paint.Align=Paint.Align.LEFT){textPaint.apply{this.color=color;textSize=size;typeface=StudioFonts.get(context,activeFont?:font,activeTypefaceStyle);textAlign=align;shader=null};val v=android.text.TextUtils.ellipsize(value,textPaint,maxWidth.coerceAtLeast(1f),android.text.TextUtils.TruncateAt.END).toString();canvas.drawText(v,x,y,textPaint)}
     private fun round(canvas:Canvas,r:RectF,color:Int,radius:Float=height*.04f){p.apply{this.color=color;style=Paint.Style.FILL;shader=null;alpha=255};canvas.drawRoundRect(r,radius,radius,p)}
     override fun onDraw(canvas:Canvas){super.onDraw(canvas);if(width==0||height==0)return;p.reset();p.isAntiAlias=true;val profile=profile();val shown=shownProfile();val scale=height/596f;val base=height*.065f;val key=profileKey();val level=demoLevel?:battery
+        if(previousAnimationProfile!=key){previousAnimationProfile=key;restartAnimation()}
         canvas.save();canvas.clipPath(geometry().outline(width.toFloat(),height.toFloat()))
         when(shown.background){"gallery"->{};"solid"->canvas.drawColor(shown.color);"photo"->{canvas.drawColor(0xff151720.toInt());image?.let{val iw=it.intrinsicWidth.coerceAtLeast(1);val ih=it.intrinsicHeight.coerceAtLeast(1);val f=max(width.toFloat()/iw,height.toFloat()/ih)*shown.imageOptions.optInt("scale",100).coerceIn(100,300)/100f
             val xx=(width-iw*f)/2+shown.imageOptions.optInt("panX",0).coerceIn(-100,100)/100f*(iw*f-width)/2
@@ -109,7 +110,14 @@ class StudioCanvas(c:Context):View(c){
         if(profile.enabled||editing)for(original in shown.widgets){val rotated=RotationSpec.shown(original,android.os.SystemClock.elapsedRealtime()-animationStarted,rotationPositions[original.id]);val w=if(rotated.kind=="notification")NotificationAppearance.apply(context,rotated,RearNotificationListener.recent().firstOrNull()?.packageName)else rotated;if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save()
             val g=geometry()
             for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.clipOutPath(Path().apply{addOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),Path.Direction.CW)})}
-            canvas.rotate(w.rotation,r.centerX(),r.centerY());canvas.saveLayerAlpha(r,if(w.enabled)w.opacity*255/100 else 50)
+            val motionAllowed=runtimeActive&&android.animation.ValueAnimator.areAnimatorsEnabled()&&!context.getSystemService(android.os.PowerManager::class.java).isPowerSaveMode
+            val transition=w.options.optString("transition","none")
+            val progress=if(motionAllowed)(((if(previewPlaying)android.os.SystemClock.elapsedRealtime() else pausedAt)-animationStarted)/600f).coerceIn(0f,1f)else 1f
+            var transitionAlpha=1f
+            if(progress<1f){when(transition){"fade"->transitionAlpha=progress;"slide"->canvas.translate(r.width()*(1-progress),0f);"zoom"->{val factor=.7f+.3f*progress;canvas.scale(factor,factor,r.centerX(),r.centerY())};"pulse"->transitionAlpha=.6f+.4f*sin(progress*Math.PI).toFloat()};if(transition!="none"&&previewPlaying)postInvalidateDelayed(33)}
+            canvas.rotate(w.rotation,r.centerX(),r.centerY())
+            val layer=Paint().apply{alpha=((if(w.enabled)w.opacity*255/100 else 50)*transitionAlpha).toInt();blendMode=when(w.options.optString("blend")){"multiply"->BlendMode.MULTIPLY;"screen"->BlendMode.SCREEN;"overlay"->BlendMode.OVERLAY;"plus"->BlendMode.PLUS;else->BlendMode.SRC_OVER}}
+            canvas.saveLayer(r,layer)
             activeFont=w.options.optString("font","").takeIf{it.isNotBlank()};activeTypefaceStyle=(if(w.options.optBoolean("bold"))Typeface.BOLD else 0) or (if(w.options.optBoolean("italic"))Typeface.ITALIC else 0)
             val ink=w.color;val pad=height*.035f;val content=r.width()-2*pad
             when(w.kind){
@@ -186,7 +194,6 @@ class StudioCanvas(c:Context):View(c){
             round(canvas,close,0xdd151720.toInt());text(canvas,"×",close.centerX(),close.centerY()+height*.025f,height*.08f,Color.WHITE,close.width(),align=Paint.Align.CENTER)
         }
         val reducedMotion=context.getSystemService(android.os.PowerManager::class.java)?.isPowerSaveMode==true||!android.animation.ValueAnimator.areAnimatorsEnabled()
-        if(previousAnimationProfile!=key){previousAnimationProfile=key;restartAnimation()}
         val time=(if(previewPlaying)android.os.SystemClock.elapsedRealtime() else pausedAt)-animationStarted
         CameraLightRenderer.draw(canvas,geometry(),width,height,profile.cameraLight,time,reducedMotion)
         if(profile.cameraLight.enabled&&geometry().lenses.size==2&&previewPlaying&&runtimeActive&&!reducedMotion&&isShown&&windowVisibility==VISIBLE&&profile.cameraLight.effect!="static")postInvalidateDelayed(33)

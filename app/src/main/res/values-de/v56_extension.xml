@@ -53,4 +53,16 @@
     <string name="s_group_widgets">Widgets zum Verschieben gruppieren</string>
     <string name="s_ungroup">Gruppierung aufheben</string>
     <string name="s_notification_per_app">Benachrichtigungsstil je App</string>
+    <string name="s_compare_lights">Lichtanimationen vergleichen</string>
+    <string name="s_play_pause">Abspielen / Pause</string>
+    <string name="s_blend_mode">Mischmodus</string>
+    <string name="s_normal_blend">Normal</string>
+    <string name="s_multiply">Multiplizieren</string>
+    <string name="s_screen">Negativ multiplizieren</string>
+    <string name="s_overlay">Ineinanderkopieren</string>
+    <string name="s_plus">Addieren</string>
+    <string name="s_transition">Übergang</string>
+    <string name="s_fade">Einblenden</string>
+    <string name="s_slide">Einschieben</string>
+    <string name="s_zoom">Zoom</string>
 </resources>

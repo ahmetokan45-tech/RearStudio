@@ -53,4 +53,16 @@
     <string name="s_group_widgets">Taşımak için widgetları grupla</string>
     <string name="s_ungroup">Grubu çöz</string>
     <string name="s_notification_per_app">Uygulamaya göre bildirim stili</string>
+    <string name="s_compare_lights">Işık animasyonlarını karşılaştır</string>
+    <string name="s_play_pause">Oynat / duraklat</string>
+    <string name="s_blend_mode">Karışım modu</string>
+    <string name="s_normal_blend">Normal</string>
+    <string name="s_multiply">Çarp</string>
+    <string name="s_screen">Ekran</string>
+    <string name="s_overlay">Kaplama</string>
+    <string name="s_plus">Topla</string>
+    <string name="s_transition">Geçiş</string>
+    <string name="s_fade">Belirme</string>
+    <string name="s_slide">Kaydırma</string>
+    <string name="s_zoom">Yakınlaştırma</string>
 </resources>

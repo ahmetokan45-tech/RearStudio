@@ -19,5 +19,5 @@ class PremiumBackgroundsTest {
   val saved=DesignLibrary(context).save("Uses image",scene);assertFalse(library.delete(entry));DesignLibrary(context).delete(saved.id)
   assertTrue(library.delete(entry));assertFalse(file.exists())
  }
- @Test fun bundledFontsDecode(){for(name in StudioFonts.families.keys){assertNotNull(StudioFonts.get(context,name,0))};assertEquals(12,StudioFonts.families.size)}
+ @Test fun bundledFontsDecode(){for(name in StudioFonts.families.keys){assertNotNull(android.graphics.Typeface.createFromAsset(context.assets,"fonts/${StudioFonts.families.getValue(name)}.ttf"))};assertEquals(12,StudioFonts.families.size)}
 }

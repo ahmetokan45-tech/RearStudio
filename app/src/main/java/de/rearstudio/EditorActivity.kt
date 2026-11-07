@@ -132,6 +132,7 @@ class EditorActivity:AppCompatActivity(){
             slider(light,"repeats",p.cameraLight.repeats,0,20){p.cameraLight=p.cameraLight.copy(repeats=it)}
             switch(light,"clockwise",p.cameraLight.clockwise){p.cameraLight=p.cameraLight.copy(clockwise=it)}
             StudioUi.button(this,light,t(if(canvas.previewPlaying)"pause_preview" else "play_preview")){canvas.playback(!canvas.previewPlaying);controls()}
+            StudioUi.button(this,light,t("compare_lights")){LightComparisonDialog.show(this,scene,profile)}
             StudioUi.button(this,light,t("restart_preview")){canvas.restartAnimation();canvas.playback(true);controls()}
         }
         StudioUi.button(this,profileBox,t("group_widgets")){
@@ -148,6 +149,10 @@ class EditorActivity:AppCompatActivity(){
         }
         val w=p.widgets.find{it.id==selected};if(w!=null){val box=StudioUi.card(this,panel);label(box,w.kind,18f);switch(box,"widget_enabled",w.enabled){w.enabled=it};switch(box,"locked",w.locked){w.locked=it;controls()};if(w.locked)return;slider(box,"rotation",w.rotation.toInt(),0,359){w.rotation=it.toFloat()};StudioUi.button(this,box,t("duplicate")){remember();val clone=StudioWidget.read(org.json.JSONObject(w.json().toString()).put("id",java.util.UUID.randomUUID().toString()));if(w.kind=="clock"){toast("one_clock")}else{p.widgets.add(clone);selected=clone.id;changed();controls()}};StudioUi.button(this,box,t("layer_up")){val i=p.widgets.indexOf(w);if(i<p.widgets.lastIndex){remember();java.util.Collections.swap(p.widgets,i,i+1);changed();controls()}};StudioUi.button(this,box,t("layer_down")){val i=p.widgets.indexOf(w);if(i>0){remember();java.util.Collections.swap(p.widgets,i,i-1);changed();controls()}};if(w.kind=="clock"){val styles=listOf("digital","stacked","analog","elegant","minimal");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}};if(w.kind=="notification"){val styles=listOf("compact","card","liquid","gradient","minimal");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}}
             if(w.options.optString("group","").isNotBlank())StudioUi.button(this,box,t("ungroup")){remember();val id=w.options.optString("group");p.widgets.filter{it.options.optString("group")==id}.forEach{it.options.remove("group")};changed();controls()}
+            val blends=listOf("normal_blend","multiply","screen","overlay","plus")
+            choice(box,"blend_mode",blends,blends.indexOf(w.options.optString("blend","normal_blend")).coerceAtLeast(0)){w.options.put("blend",blends[it])}
+            val transitions=listOf("none","fade","slide","zoom","pulse")
+            choice(box,"transition",transitions,transitions.indexOf(w.options.optString("transition","none")).coerceAtLeast(0)){w.options.put("transition",transitions[it]);canvas.restartAnimation()}
             if(w.kind=="rotation_widget"){
                 switch(box,"auto_rotate",w.options.optBoolean("autoRotate",true)){w.options.put("autoRotate",it)}
                 StudioUi.button(this,box,t("rotation_slides")){rotationSlides(w)}

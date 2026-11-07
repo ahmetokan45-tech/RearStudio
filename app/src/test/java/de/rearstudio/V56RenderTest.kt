@@ -24,6 +24,11 @@ class V56RenderTest {
         profile.widgets.add(StudioWidget(kind="gradient",x=0f,y=0f,w=1f,h=1f,color=Color.RED).apply{options.put("color2",Color.RED)})
         val bitmap=render(view);assertEquals(Color.BLACK,bitmap.getPixel(120,150));assertEquals(Color.BLACK,bitmap.getPixel(120,440));assertEquals(Color.RED,bitmap.getPixel(500,300));bitmap.recycle();view.dispose()
     }
+    @Test fun multiplyBlendComposesAgainstBackground(){
+        val view=StudioCanvas(context);val profile=view.scene.profile("normal");profile.widgets.clear();profile.background="solid";profile.color=Color.BLUE;profile.dim=0
+        profile.widgets.add(StudioWidget(kind="gradient",x=.35f,y=.1f,w=.6f,h=.8f,color=Color.RED).apply{options.put("color2",Color.RED).put("blend","multiply")})
+        val bitmap=render(view);assertEquals(Color.BLACK,bitmap.getPixel(500,300));bitmap.recycle();view.dispose()
+    }
     @Test fun lockedWidgetCannotBeDragged(){
         val view=StudioCanvas(context).apply{editing=true};view.layout(0,0,976,596);val w=view.scene.profile("normal").widgets.first();w.locked=true
         val x=(w.x+w.w/2)*976;val y=(w.y+w.h/2)*596;val before=w.json().toString()

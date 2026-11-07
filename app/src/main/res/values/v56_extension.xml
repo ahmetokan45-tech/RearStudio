@@ -53,4 +53,16 @@
     <string name="s_group_widgets">Group widgets for moving</string>
     <string name="s_ungroup">Ungroup</string>
     <string name="s_notification_per_app">Notification style per app</string>
+    <string name="s_compare_lights">Compare light animations</string>
+    <string name="s_play_pause">Play / pause</string>
+    <string name="s_blend_mode">Blend mode</string>
+    <string name="s_normal_blend">Normal</string>
+    <string name="s_multiply">Multiply</string>
+    <string name="s_screen">Screen</string>
+    <string name="s_overlay">Overlay</string>
+    <string name="s_plus">Add</string>
+    <string name="s_transition">Transition</string>
+    <string name="s_fade">Fade</string>
+    <string name="s_slide">Slide</string>
+    <string name="s_zoom">Zoom</string>
 </resources>
