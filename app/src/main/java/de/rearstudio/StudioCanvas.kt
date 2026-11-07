@@ -134,21 +134,51 @@ class StudioCanvas(c:Context):View(c){
                     }
                 }
                 "activity"->{
-                    when(w.style){
-                        "liquid"->round(canvas,r,0x663c424d)
-                        "gradient"->{p.shader=LinearGradient(r.left,r.top,r.right,r.bottom,intArrayOf(0xff161820.toInt(),w.options.optInt("color2",0xff49302b.toInt())),null,Shader.TileMode.CLAMP);canvas.drawRoundRect(r,height*.04f,height*.04f,p);p.shader=null}
-                        else->round(canvas,r,0xff1b1e25.toInt())
-                    }
+                    val glass=w.style=="liquid"
+                    val gradient=w.style=="gradient"
+                    val accent=when {glass->0xff65ddf5.toInt();gradient->0xffffa267.toInt();else->0xffffa12b.toInt()}
+                    p.style=Paint.Style.FILL
+                    p.shader=LinearGradient(r.left,r.top,r.right,r.bottom,
+                        when {glass->intArrayOf(0xff263f56.toInt(),0xff101e31.toInt());gradient->intArrayOf(0xff512840.toInt(),0xff211a2f.toInt());else->intArrayOf(0xff252d3b.toInt(),0xff0c1019.toInt())},
+                        null,Shader.TileMode.CLAMP)
+                    canvas.drawRoundRect(r,height*.045f,height*.045f,p);p.shader=null
+                    p.style=Paint.Style.STROKE;p.strokeWidth=maxOf(1f,height*.002f)
+                    p.color=when {glass->0xff527a94.toInt();gradient->0xff8a526c.toInt();else->0xff4b5669.toInt()}
+                    canvas.drawRoundRect(r,height*.045f,height*.045f,p);p.style=Paint.Style.FILL
                     val steps=ActivityData.today(context)
                     val goal=w.options.optInt("goal",8000).coerceAtLeast(1)
-                    if(w.options.optBoolean("showLabel",true))text(canvas,StudioUi.text(context,"activity"),r.left+pad,r.top+r.height()*.17f,base*.4f,ink,content)
-                    text(canvas,steps?.let{java.text.NumberFormat.getIntegerInstance().format(it)}?:"—",r.left+pad,r.top+r.height()*.43f,min(base*1.4f,r.height()*.25f),ink,content)
-                    if(w.options.optBoolean("showGoal",true))text(canvas,"/ "+java.text.NumberFormat.getIntegerInstance().format(goal),r.left+pad,r.top+r.height()*.57f,base*.38f,ink,content)
+                    val progress=((steps?:0L).toFloat()/goal).coerceIn(0f,1f)
+                    val inset=r.width()*.06f
+                    val titleY=r.top+r.height()*.19f
+                    if(w.options.optBoolean("showLabel",true))text(canvas,StudioUi.text(context,"activity").uppercase(Locale.getDefault()),r.left+inset,titleY,base*.34f,0xffb6c5d7.toInt(),r.width()*.62f)
+                    text(canvas,steps?.let{java.text.NumberFormat.getIntegerInstance().format(it)}?:"—",r.left+inset,r.top+r.height()*.46f,min(base*1.42f,r.height()*.24f),0xfff7f9fd.toInt(),r.width()*.62f)
+                    if(w.options.optBoolean("showGoal",true))text(canvas,"/ "+java.text.NumberFormat.getIntegerInstance().format(goal),r.left+inset,r.top+r.height()*.59f,base*.34f,0xffb4bdca.toInt(),r.width()*.55f)
+                    val ringRadius=min(r.width()*.15f,r.height()*.27f)
+                    val ringX=r.right-inset-ringRadius
+                    val ringY=r.top+r.height()*.39f
+                    val ring=RectF(ringX-ringRadius,ringY-ringRadius,ringX+ringRadius,ringY+ringRadius)
+                    p.style=Paint.Style.STROKE;p.strokeCap=Paint.Cap.ROUND;p.strokeWidth=maxOf(3f,ringRadius*.20f)
+                    p.color=0xff354050.toInt();canvas.drawArc(ring,-90f,360f,false,p)
+                    p.color=accent;canvas.drawArc(ring,-90f,progress*360f,false,p)
+                    p.style=Paint.Style.FILL
+                    text(canvas,"${(progress*100).toInt()}%",ringX,ringY+base*.14f,base*.31f,0xfff7f9fd.toInt(),ringRadius*1.7f,align=Paint.Align.CENTER)
                     if(w.options.optBoolean("showChart",true)){
-                        val week=ActivityData.week(context);val max=maxOf(goal.toLong(),week.filterNotNull().maxOrNull()?:1L)
-                        val bw=content/10;week.forEachIndexed{i,v->val left=r.left+pad+i*content/7;p.color=if(v==null)0xff40434b.toInt() else ink;val barHeight=maxOf(height*.004f,(v?:0)*r.height()*.18f/max);canvas.drawRoundRect(RectF(left,r.top+r.height()*.8f-barHeight,left+bw,r.top+r.height()*.8f),bw/3,bw/3,p);text(canvas,java.time.LocalDate.now().minusDays((6-i).toLong()).format(DateTimeFormatter.ofPattern("EE",Locale.getDefault())),left,r.top+r.height()*.86f,base*.22f,0xffbec2cb.toInt(),bw)}
+                        val week=ActivityData.week(context)
+                        val maxValue=maxOf(goal.toLong(),week.filterNotNull().maxOrNull()?:1L)
+                        val chartTop=r.top+r.height()*.67f
+                        val chartBottom=r.top+r.height()*.86f
+                        val slot=(r.width()-2*inset)/7f
+                        week.forEachIndexed{i,v->
+                            val x=r.left+inset+(i+.35f)*slot
+                            val barWidth=slot*.34f
+                            val barHeight=((v?:0L).toFloat()/maxValue).coerceIn(0f,1f)*(chartBottom-chartTop)
+                            p.color=if(v==null)0xff465064.toInt() else accent
+                            canvas.drawRoundRect(RectF(x,chartBottom-maxOf(height*.003f,barHeight),x+barWidth,chartBottom),barWidth*.35f,barWidth*.35f,p)
+                            val day=java.time.LocalDate.now().minusDays((6-i).toLong()).format(DateTimeFormatter.ofPattern("EE",Locale.getDefault()))
+                            text(canvas,day,x,chartBottom+r.height()*.065f,base*.20f,0xffaeb9c9.toInt(),slot)
+                        }
                     }
-                    text(canvas,StudioUi.text(context,if(ActivityData.available(context))"steps_observed" else "activity_access"),r.left+pad,r.bottom-pad,base*.28f,0xffbfc2ca.toInt(),content)
+                    text(canvas,StudioUi.text(context,if(ActivityData.available(context))"steps_observed" else "activity_access"),r.left+inset,r.bottom-r.height()*.035f,base*.23f,0xff9ca9bb.toInt(),r.width()*.86f)
                 }
                 "unavailable"->text(canvas,StudioUi.text(context,"data_source_unverified"),r.left,r.centerY(),base*.42f,ink,r.width())
                 "text"->text(canvas,w.options.optString("text","Text"),r.left,r.centerY()+r.height()*.2f,r.height()*.6f,ink,r.width())
