@@ -27,3 +27,14 @@ Source of truth: Rear_Studio_Master_Prompt_V5_6.pdf (user-provided master specif
 - CI: testDebugUnitTest, lintDebug, assembleDebug succeed.
 - Device: Shizuku, scene rendering, camera-safe layout, touch/gestures, media session, notification access, charging, persistent storage, background switch, animations, offline and battery behavior tested.
 - Explicitly mark unsupported hardware-dependent features; never claim finished without evidence.
+
+## Current implementation evidence
+
+See [V56_STATUS.md](V56_STATUS.md) for the explicit implemented/remaining matrix.
+The existing application was Kotlin with Android Views/Canvas, not Compose. The
+native shared renderer is retained. The debug application ID is isolated as
+`de.rearstudio.v56dev`; the baseline branch has not been changed.
+
+Automated CI also verifies APK signing, ZIP integrity, manifest application ID and
+minimum SDK, and records the exact commit and APK SHA-256. Hardware acceptance is
+still required and must not be inferred from passing CI.

@@ -22,6 +22,25 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build, unit tests and lint
         run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug
+      - name: Verify installable debug package
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk > app/build/reports/apk-badging.txt
+          python3 - <<'PYVERIFY'
+          from pathlib import Path
+          import hashlib, subprocess, zipfile
+          apk=Path("app/build/outputs/apk/debug/app-debug.apk")
+          with zipfile.ZipFile(apk) as archive:
+              assert archive.testzip() is None
+              assert "AndroidManifest.xml" in archive.namelist()
+              assert "classes.dex" in archive.namelist()
+          badging=Path("app/build/reports/apk-badging.txt").read_text()
+          assert "package: name='de.rearstudio.v56dev'" in badging
+          assert "sdkVersion:'35'" in badging
+          text="Commit: "+subprocess.check_output(["git","rev-parse","HEAD"]).decode().strip()+"\nSHA-256: "+hashlib.sha256(apk.read_bytes()).hexdigest()+"\n"
+          Path("app/build/reports/apk-verification.txt").write_text(text+badging)
+          print(text)
+          PYVERIFY
       - name: Name APK
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AHM3T45-STUDIO-V56-development.apk
       - uses: actions/upload-artifact@v4
@@ -40,4 +59,5 @@ jobs:
             app/build/reports/lint-results-debug.*
             app/build/test-results/
             app/build/reports/studio-preview.png
+            app/build/reports/apk-*.txt
           retention-days: 14
