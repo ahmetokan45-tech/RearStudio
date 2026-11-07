@@ -23,10 +23,20 @@ jobs:
       - name: Build, unit tests and lint
         run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug
       - name: Name APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AHM3T45-STUDIO-0.10-debug.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AHM3T45-STUDIO-V56-development.apk
       - uses: actions/upload-artifact@v4
         with:
           name: AHM3T45-STUDIO-debug-apk
-          path: app/build/outputs/apk/debug/AHM3T45-STUDIO-0.10-debug.apk
+          path: app/build/outputs/apk/debug/AHM3T45-STUDIO-V56-development.apk
           if-no-files-found: error
+          retention-days: 14
+      - name: Preserve automated test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: V56-check-reports
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.*
+            app/build/test-results/
           retention-days: 14

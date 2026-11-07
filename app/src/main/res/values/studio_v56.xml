@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="s_design_library">My designs</string>
+    <string name="s_save_design">Save design</string>
+    <string name="s_no_saved_designs">No saved designs yet</string>
+    <string name="s_manage_design">Manage</string>
+    <string name="s_name_required">Please enter a name</string>
+    <string name="s_save_failed">Could not save</string>
+    <string name="s_rename">Rename</string>
+    <string name="s_duplicate">Duplicate</string>
+    <string name="s_favorite">Toggle favorite</string>
+    <string name="s_delete_design">Delete design</string>
+    <string name="s_background_only">Background only</string>
+    <string name="s_apply_design">Apply</string>
+    <string name="s_restore_design">Restore previous design</string>
+    <string name="s_restore_draft">Restore unsaved draft?</string>
+    <string name="s_restore">Restore</string>
+    <string name="s_redo">Redo</string>
+    <string name="s_locked">Layer locked</string>
+    <string name="s_rotation">Rotation</string>
+    <string name="s_layer_up">Bring forward</string>
+    <string name="s_layer_down">Send backward</string>
+    <string name="s_one_clock">One clock per view</string>
+    <string name="s_edit_text">Edit text</string>
+    <string name="s_text">Text</string>
+    <string name="s_gradient_type">Gradient type</string>
+    <string name="s_linear">Linear</string>
+    <string name="s_radial">Radial</string>
+    <string name="s_sweep">Conical</string>
+</resources>

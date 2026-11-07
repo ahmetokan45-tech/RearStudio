@@ -2,7 +2,14 @@ plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
 android {
     namespace = "de.rearstudio"
     compileSdk = 36
-    defaultConfig { applicationId = "de.rearstudio"; minSdk = 35; targetSdk = 36; versionCode = 10; versionName = "0.10-geometry-preview" }
+    defaultConfig { applicationId = "de.rearstudio"; minSdk = 35; targetSdk = 36; versionCode = 11; versionName = "0.11-v56-development" }
+    buildTypes {
+        getByName("debug") {
+            applicationIdSuffix = ".v56dev"
+            manifestPlaceholders["appLabel"] = "AHM3T45 V5.6 Test"
+        }
+        getByName("release") { manifestPlaceholders["appLabel"] = "AHM3T45 STUDIO" }
+    }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     testOptions {
         unitTests.isIncludeAndroidResources = true

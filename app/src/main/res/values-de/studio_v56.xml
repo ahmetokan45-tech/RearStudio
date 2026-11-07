@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="s_design_library">Meine Designs</string>
+    <string name="s_save_design">Design speichern</string>
+    <string name="s_no_saved_designs">Noch keine gespeicherten Designs</string>
+    <string name="s_manage_design">Verwalten</string>
+    <string name="s_name_required">Bitte einen Namen eingeben</string>
+    <string name="s_save_failed">Speichern fehlgeschlagen</string>
+    <string name="s_rename">Umbenennen</string>
+    <string name="s_duplicate">Duplizieren</string>
+    <string name="s_favorite">Favorit umschalten</string>
+    <string name="s_delete_design">Design löschen</string>
+    <string name="s_background_only">Nur Hintergrund wechseln</string>
+    <string name="s_apply_design">Anwenden</string>
+    <string name="s_restore_design">Zum vorherigen Design zurück</string>
+    <string name="s_restore_draft">Ungespeicherten Entwurf wiederherstellen?</string>
+    <string name="s_restore">Wiederherstellen</string>
+    <string name="s_redo">Wiederholen</string>
+    <string name="s_locked">Ebene gesperrt</string>
+    <string name="s_rotation">Drehung</string>
+    <string name="s_layer_up">Ebene nach vorne</string>
+    <string name="s_layer_down">Ebene nach hinten</string>
+    <string name="s_one_clock">Eine Uhr pro Ansicht</string>
+    <string name="s_edit_text">Text bearbeiten</string>
+    <string name="s_text">Text</string>
+    <string name="s_gradient_type">Verlaufsart</string>
+    <string name="s_linear">Linear</string>
+    <string name="s_radial">Radial</string>
+    <string name="s_sweep">Kreisförmig</string>
+</resources>
