@@ -44,6 +44,11 @@ class V56RenderTest {
         CameraLightRenderer.draw(canvas,DisplayGeometry(),976,596,LightAnimation(enabled=true,fadeMs=0),1000,false)
         assertEquals(0,bitmap.getPixel(120,150));bitmap.recycle()
     }
+    @Test fun inactiveRendererClosesTransientViewAndPausesAnimation(){
+        val view=StudioCanvas(context);view.openSmartView("smart_music");view.setRuntimeActive(false)
+        assertNull(view.smartViews.opened);assertFalse(view.runtimeActive);assertFalse(view.previewPlaying)
+        view.setRuntimeActive(true);assertTrue(view.runtimeActive);assertTrue(view.previewPlaying);view.dispose()
+    }
     @Test fun saveRendererPreviewForVisualReview(){
         val view=StudioCanvas(context);val p=view.scene.profile("normal");p.widgets.clear();p.background="solid";p.color=0xff101116.toInt();p.dim=0
         p.widgets.add(StudioWidget(kind="gradient",x=.35f,y=.06f,w=.59f,h=.86f,color=0xff191c24.toInt()).apply{options.put("color2",0xff3f2635.toInt())})

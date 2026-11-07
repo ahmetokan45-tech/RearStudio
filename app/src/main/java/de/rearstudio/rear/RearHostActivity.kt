@@ -90,6 +90,7 @@ class RearHostActivity : Activity() {
 
     // A pull down on the notification list is under way, so touches still go to the gestures.
     private var pulling = false
+    private var studioLayer: de.rearstudio.StudioRearLayer? = null
 
     // How much of the charging animation and the notification list shows; the clock fades out by as much.
     private var chargingShown = 0f
@@ -188,7 +189,7 @@ class RearHostActivity : Activity() {
         setContentView(root)
         if (!popover) applyKeepLit()
         if (!popover) addWallpaper(root, display)
-        if (!popover) root.addView(de.rearstudio.StudioRearLayer(this).apply { onFrame = { this@RearHostActivity.onShownChanged() } }, FrameLayout.LayoutParams(-1, -1))
+        if (!popover) root.addView(de.rearstudio.StudioRearLayer(this).apply { studioLayer = this; onFrame = { this@RearHostActivity.onShownChanged() } }, FrameLayout.LayoutParams(-1, -1))
         if (!popover) holdFirstDraw()
         addCharging(root, display)
         if (!popover) addNotifications(root, display)
@@ -417,6 +418,7 @@ class RearHostActivity : Activity() {
     // there. On its way there on the main screen, the window has neither: BACK closes it, as it
     // always did.
     private fun onBack() {
+        if(studioLayer?.closeSmartView()==true)return
         when {
             notifications?.isShadeOpen == true -> notifications?.closeShade(animate = true)
             !started || !isLit() -> {}
@@ -446,6 +448,10 @@ class RearHostActivity : Activity() {
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (!onRear) return super.dispatchTouchEvent(event)
+        if (!popover && studioLayer?.ownsGestures()==true) {
+            if (!started || !isLit() || !gestures.acceptsTouch) return true
+            return super.dispatchTouchEvent(event)
+        }
         // While the notification list is down, it takes every touch: to go back up, or stay.
         val layer = notifications
         if (layer != null && layer.isShadeOpen && !pulling) return layer.onShadeTouch(event)
@@ -459,10 +465,11 @@ class RearHostActivity : Activity() {
      * but not while the phone is locked with no notifications on the lock screen.
      */
     private fun updateGestures() {
-        val shade = !popover && NotificationSettings.isEnabled(this) && NotificationSettings.swipeDown(this) &&
+        val studioNavigation = !popover && studioLayer?.ownsGestures()==true
+        val shade = !studioNavigation && !popover && NotificationSettings.isEnabled(this) && NotificationSettings.swipeDown(this) &&
             RearNotificationListener.isListening &&
             NotificationFormatter.showsAny(PhoneLock.hidesContent(this), NotificationAccess.lockScreen(this))
-        gestures.enabled = !popover && (CameraSettings.isEnabled(this) || shade)
+        gestures.enabled = !popover && (studioNavigation || CameraSettings.isEnabled(this) || shade)
         gestures.pullDown = shade
         gestures.setLit(started && isLit())
         if (!shade) notifications?.closeShade(animate = false)
@@ -471,6 +478,7 @@ class RearHostActivity : Activity() {
     /** Images pan and GIFs play only while the rear is lit: a dimmed one shows none of it. */
     private fun updateMotion() {
         wallpaper?.moving = started && isLit()
+        studioLayer?.setRuntimeActive(started && isLit())
     }
 
     /** The notification list starts coming down, if it may. */

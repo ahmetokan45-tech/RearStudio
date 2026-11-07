@@ -25,6 +25,14 @@ class StudioCanvas(c:Context):View(c){
     var scene=StudioScene.load(c);var editing=false;var forcedProfile:String?="normal";var selected:String?=null
     var onSelect:((StudioWidget?)->Unit)?=null;var onBeforeChange:(()->Unit)?=null;var onChanged:(()->Unit)?=null;var onDelete:((String)->Unit)?=null
     var onFrame:(()->Unit)?=null
+    var runtimeActive=true
+        private set
+    fun setRuntimeActive(active:Boolean){
+        if(runtimeActive==active)return
+        runtimeActive=active;handler.removeCallbacks(tick);playback(active)
+        if(active)(image as? AnimatedImageDrawable)?.start() else (image as? AnimatedImageDrawable)?.stop()
+        if(active&&attached)handler.post(tick) else smartViews.close()
+    }
     val smartViews=SmartViews()
     private var touchStartX=0f;private var touchStartY=0f
     fun openSmartView(name:String){smartViews.open(name,android.os.SystemClock.elapsedRealtime());refresh()}
@@ -48,7 +56,7 @@ class StudioCanvas(c:Context):View(c){
     private var drag:String?=null;private var resize=false;private var dx=0f;private var dy=0f;private var oldX=0f;private var oldY=0f;private var oldW=0f;private var oldH=0f;private var moved=false
     private var artwork:Bitmap?=null;private var song="";private var artist="";private var media:android.media.session.MediaController?=null
     private var image:Drawable?=null;private var imageKey="";private val imageLoader=java.util.concurrent.Executors.newSingleThreadExecutor();private var attached=false;private var loaded=false
-    private val tick=object:Runnable{override fun run(){if(!attached)return;update();handler.postDelayed(this,1000)}}
+    private val tick=object:Runnable{override fun run(){if(!attached||!runtimeActive)return;update();handler.postDelayed(this,1000)}}
     fun profileKey():String {if(!editing)smartViews.opened?.let{return it};forcedProfile?.let{return it};val sp=context.getSharedPreferences("studio",0);if(sp.contains("preview")&&System.currentTimeMillis()-sp.getLong("preview_time",0)<15_000)sp.getString("preview_profile",null)?.let{return it};val now=System.currentTimeMillis();val note=RearNotificationListener.recent().firstOrNull();val np=scene.profile("notification");if(note!=null&&np.enabled&&np.popup&&now>=note.postedAt&&(np.duration==0||now-note.postedAt<=np.duration*1000L))return "notification";return if(charging&&scene.profile("charging").enabled&&(scene.profile("charging").duration==0||now-pluggedAt<scene.profile("charging").duration*1000L))"charging" else "normal"}
     fun profile()=scene.profile(profileKey())
     private fun shownProfile()=if(profileKey()=="charging"&&profile().reuseNormal)scene.profile("normal") else profile()
@@ -130,7 +138,7 @@ class StudioCanvas(c:Context):View(c){
         if(previousAnimationProfile!=key){previousAnimationProfile=key;restartAnimation()}
         val time=(if(previewPlaying)android.os.SystemClock.elapsedRealtime() else pausedAt)-animationStarted
         CameraLightRenderer.draw(canvas,geometry(),width,height,profile.cameraLight,time,reducedMotion)
-        if(profile.cameraLight.enabled&&geometry().lenses.size==2&&previewPlaying&&!reducedMotion&&isShown&&windowVisibility==VISIBLE&&profile.cameraLight.effect!="static")postInvalidateDelayed(33)
+        if(profile.cameraLight.enabled&&geometry().lenses.size==2&&previewPlaying&&runtimeActive&&!reducedMotion&&isShown&&windowVisibility==VISIBLE&&profile.cameraLight.effect!="static")postInvalidateDelayed(33)
         if(cameraGuides){p.shader=null;p.color=0x55777788;p.style=Paint.Style.STROKE;p.strokeWidth=1f;val g=geometry();for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.drawOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),p)};p.style=Paint.Style.FILL}
         canvas.restore()
     }
@@ -139,7 +147,7 @@ class StudioCanvas(c:Context):View(c){
             if(event.actionMasked==MotionEvent.ACTION_DOWN){touchStartX=x;touchStartY=y;smartViews.interact(android.os.SystemClock.elapsedRealtime());return true}
             if(event.actionMasked==MotionEvent.ACTION_UP){
                 val direction=SmartViews.direction(x-touchStartX,y-touchStartY,StudioUi.dp(context,48).toFloat())
-                if(direction!=null){smartViews.swipe(direction,scene.navigation,android.os.SystemClock.elapsedRealtime());refresh();performClick();return true}
+                if(direction!=null&&(smartViews.opened!=null||forcedProfile!=null||scene.navigation.optBoolean("enabled",false))){smartViews.swipe(direction,scene.navigation,android.os.SystemClock.elapsedRealtime());refresh();performClick();return true}
                 if(smartViews.opened!=null&&x>width-height*.15f&&y<height*.15f){smartViews.close();refresh();performClick();return true}
 val w=ws.lastOrNull{it.enabled&&hit(it,x,y)}?:return false;if(w.kind=="notification"){RearNotificationListener.recent().firstOrNull()?.let{NotificationOpen.open(context,it.key)};return true};if(w.kind=="music"){val r=rect(w);if(y>r.top+r.height()*.6f){try{val controls=media?.transportControls;when(((x-r.left)/r.width()*3).toInt().coerceIn(0,2)){0->controls?.skipToPrevious();1->if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)controls?.pause() else controls?.play();2->controls?.skipToNext()}}catch(_:RuntimeException){};invalidate();return true}}};return true}
         when(event.actionMasked){MotionEvent.ACTION_DOWN->{if(profileKey()=="charging"&&profile().chargeEnabled&&profile().chargeStyle=="edge"&&hypot(x-(width-height*.045f),y-height*.045f)<StudioUi.dp(context,18)){onBeforeChange?.invoke();profile().chargeEnabled=false;onChanged?.invoke();invalidate();return true};val current=ws.find{it.id==selected};val tolerance=StudioUi.dp(context,18).toFloat();if(current!=null&&!current.locked){val r=rect(current);if(hypot(x-r.right,y-r.top)<tolerance){onDelete?.invoke(current.id);return true};resize=hypot(x-r.right,y-r.bottom)<tolerance}

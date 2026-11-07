@@ -80,4 +80,5 @@
     <string name="s_image_contrast">Bildkontrast (%)</string>
     <string name="s_image_saturation">Sättigung (%)</string>
     <string name="s_reset_image">Bildanpassungen zurücksetzen</string>
+    <string name="s_enable_smart_gestures">Experimentelle Smart-View-Gesten am Rückdisplay aktivieren</string>
 </resources>

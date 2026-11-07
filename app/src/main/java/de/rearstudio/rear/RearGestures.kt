@@ -147,6 +147,7 @@ class RearGestures(context: Context, private val listener: Listener) : SensorEve
     private val slop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
     private var listening = false
     private var covered = false
+    val acceptsTouch: Boolean get() = lit && !covered
 
     private var tracking = false
     private var pulling = false

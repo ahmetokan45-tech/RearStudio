@@ -20,6 +20,9 @@ apps' rear-display services concurrently. No existing installation is uninstalle
 - Shared Smart View navigation: configurable four directions, independent close
   gesture, always-visible X, configurable idle timer, app-preview fallback.
   Music/notifications reuse existing widgets and permission/data handling.
+  Rear gestures are opt-in; while enabled they take precedence over inherited
+  camera/shade swipes. The inherited proximity/lit gate remains in force.
+  Screen-off pauses studio updates, image playback and light animations.
 - Five notification visual styles: compact, card, translucent glass, gradient,
   minimal. This is an initial style implementation, not pixel-matched premium art.
 - Experimental light renderer around two explicitly entered calibration circles:

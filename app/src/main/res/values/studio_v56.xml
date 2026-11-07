@@ -80,4 +80,5 @@
     <string name="s_image_contrast">Image contrast (%)</string>
     <string name="s_image_saturation">Saturation (%)</string>
     <string name="s_reset_image">Reset image adjustments</string>
+    <string name="s_enable_smart_gestures">Enable experimental rear Smart View gestures</string>
 </resources>
