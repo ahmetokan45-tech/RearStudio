@@ -1,0 +1,14 @@
+<resources>
+    <string name="s_gradient_stops">Verlaufsfarben (2–8)</string>
+    <string name="s_gradient_angle">Verlaufswinkel</string>
+    <string name="s_stop_position">Position (%)</string>
+    <string name="s_add_stop">Farbpunkt hinzufügen</string>
+    <string name="s_duplicate_stops">Jeder Farbpunkt benötigt eine eigene Position.</string>
+    <string name="s_invalid_color">#RRGGBB oder #AARRGGBB eingeben.</string>
+    <string name="s_export_design">Design mit Bildern exportieren</string>
+    <string name="s_import_design">Design importieren</string>
+    <string name="s_export_done">Design exportiert.</string>
+    <string name="s_archive_failed">Designarchiv konnte nicht gelesen oder geschrieben werden.</string>
+    <string name="s_quick_switcher">Favoriten durch langes Drücken (experimentell)</string>
+    <string name="s_no_favorite_designs">Markiere zuerst Designs in Meine Designs als Favoriten.</string>
+</resources>

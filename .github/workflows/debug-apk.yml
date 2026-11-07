@@ -61,3 +61,29 @@ jobs:
             app/build/reports/studio-preview.png
             app/build/reports/apk-*.txt
           retention-days: 14
+
+  publish-development:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/rear-studio-v56-development'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: AHM3T45-STUDIO-debug-apk
+          path: dist
+      - name: Publish verified comparison APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v56-dev-${GITHUB_RUN_NUMBER}"
+          sha256sum dist/*.apk > dist/SHA256SUMS.txt
+          cat > dist/NOTES.md <<'NOTES'
+          Native Android development build. Installs separately as AHM3T45 V5.6 Test (de.rearstudio.v56dev).
+          Build, unit tests, lint and APK signature/manifest verification passed before publication.
+          This is NOT the complete V5.6 product. Target-device tests remain pending.
+          See docs/V56_STATUS.md for remaining implementation and docs/V56_DEVICE_TEST_DE.md for hardware checks.
+          NOTES
+          gh release create "$tag" dist/*.apk dist/SHA256SUMS.txt --target "$GITHUB_SHA" --prerelease --title "AHM3T45 V5.6 development $GITHUB_RUN_NUMBER" --notes-file dist/NOTES.md

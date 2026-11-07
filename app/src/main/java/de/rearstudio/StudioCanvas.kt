@@ -29,10 +29,13 @@ class StudioCanvas(c:Context):View(c){
         private set
     fun setRuntimeActive(active:Boolean){
         if(runtimeActive==active)return
-        runtimeActive=active;handler.removeCallbacks(tick);playback(active)
+        runtimeActive=active;handler.removeCallbacks(tick);handler.removeCallbacks(longPress);playback(active)
         if(active)(image as? AnimatedImageDrawable)?.start() else (image as? AnimatedImageDrawable)?.stop()
         if(active&&attached)handler.post(tick) else smartViews.close()
     }
+    var onQuickSwitch:(()->Unit)?=null
+    private var longPressed=false
+    private val longPress=Runnable{if(!editing&&runtimeActive&&scene.navigation.optBoolean("quickSwitcher",false)){longPressed=true;onQuickSwitch?.invoke()}}
     val smartViews=SmartViews()
     private var touchStartX=0f;private var touchStartY=0f
     fun openSmartView(name:String){smartViews.open(name,android.os.SystemClock.elapsedRealtime());refresh()}
@@ -72,7 +75,7 @@ class StudioCanvas(c:Context):View(c){
         invalidate();onFrame?.invoke()
     }
     override fun onAttachedToWindow(){super.onAttachedToWindow();attached=true;handler.post(tick)}
-    override fun onDetachedFromWindow(){smartViews.close();attached=false;handler.removeCallbacks(tick);(image as? AnimatedImageDrawable)?.stop();image?.callback=null;imageKey="";image=null;super.onDetachedFromWindow()}
+    override fun onDetachedFromWindow(){handler.removeCallbacks(longPress);smartViews.close();attached=false;handler.removeCallbacks(tick);(image as? AnimatedImageDrawable)?.stop();image?.callback=null;imageKey="";image=null;super.onDetachedFromWindow()}
     fun dispose(){imageLoader.shutdownNow()}
     override fun verifyDrawable(who:Drawable)=who===image||super.verifyDrawable(who)
     private fun hit(w:StudioWidget,x:Float,y:Float):Boolean {
@@ -103,7 +106,17 @@ class StudioCanvas(c:Context):View(c){
             when(w.kind){
                 "unavailable"->text(canvas,StudioUi.text(context,"data_source_unverified"),r.left,r.centerY(),base*.42f,ink,r.width())
                 "text"->text(canvas,w.options.optString("text","Text"),r.left,r.centerY()+r.height()*.2f,r.height()*.6f,ink,r.width())
-                "gradient"->{val colors=intArrayOf(ink,w.options.optInt("color2",scene.accent));p.shader=when(w.style){"radial"->RadialGradient(r.centerX(),r.centerY(),maxOf(r.width(),r.height())/2,colors,null,Shader.TileMode.CLAMP);"sweep"->SweepGradient(r.centerX(),r.centerY(),colors,null);else->LinearGradient(r.left,r.top,r.right,r.bottom,colors,null,Shader.TileMode.CLAMP)};p.style=Paint.Style.FILL;p.alpha=255;canvas.drawRect(r,p);p.shader=null}
+                "gradient"->{
+                    val gradient=GradientSpec.read(w)
+                    val colors=gradient.stops.map{it.color}.toIntArray();val stops=gradient.stops.map{it.position}.toFloatArray()
+                    val reduced=!android.animation.ValueAnimator.areAnimatorsEnabled()||context.getSystemService(android.os.PowerManager::class.java).isPowerSaveMode
+                    val elapsed=(if(previewPlaying)android.os.SystemClock.elapsedRealtime() else pausedAt)-animationStarted
+                    val angle=gradient.angleAt(elapsed,reduced)*Math.PI/180
+                    val gx=cos(angle).toFloat()*r.width()/2;val gy=sin(angle).toFloat()*r.height()/2
+                    p.shader=when(w.style){"radial"->RadialGradient(r.centerX(),r.centerY(),maxOf(r.width(),r.height())/2,colors,stops,Shader.TileMode.CLAMP);"sweep"->SweepGradient(r.centerX(),r.centerY(),colors,stops).apply{setLocalMatrix(Matrix().apply{setRotate(gradient.angleAt(elapsed,reduced),r.centerX(),r.centerY())})};else->LinearGradient(r.centerX()-gx,r.centerY()-gy,r.centerX()+gx,r.centerY()+gy,colors,stops,Shader.TileMode.CLAMP)}
+                    p.style=Paint.Style.FILL;p.alpha=255;canvas.drawRect(r,p);p.shader=null
+                    if(gradient.animated&&previewPlaying&&runtimeActive&&!reduced&&isShown)postInvalidateDelayed(33)
+                }
 
                 "clock"->{val now=LocalDateTime.now();val size=min(r.height()*.57f,r.width()*.29f);if(w.style=="analog"){val radius=min(r.width(),r.height())*.40f;p.apply{color=ink;style=Paint.Style.STROKE;strokeWidth=height*.005f};canvas.drawCircle(r.centerX(),r.centerY(),radius,p);for(i in 0..11){val a=i*Math.PI/6;canvas.drawLine(r.centerX()+sin(a).toFloat()*radius*.85f,r.centerY()-cos(a).toFloat()*radius*.85f,r.centerX()+sin(a).toFloat()*radius*.95f,r.centerY()-cos(a).toFloat()*radius*.95f,p)};fun hand(angle:Double,length:Float){p.strokeWidth=height*.009f;p.strokeCap=Paint.Cap.ROUND;canvas.drawLine(r.centerX(),r.centerY(),r.centerX()+sin(angle).toFloat()*radius*length,r.centerY()-cos(angle).toFloat()*radius*length,p)};hand((now.hour%12+now.minute/60.0)*Math.PI/6,.55f);hand(now.minute*Math.PI/30,.82f);p.style=Paint.Style.FILL}else if(w.style=="stacked"){text(canvas,now.format(DateTimeFormatter.ofPattern("HH")),r.left+pad,r.top+r.height()*.45f,size*.8f,ink,content);text(canvas,now.format(DateTimeFormatter.ofPattern("mm")),r.left+pad,r.top+r.height()*.93f,size*.8f,ink,content)}else{text(canvas,now.format(DateTimeFormatter.ofPattern("HH:mm")),r.left+pad,r.top+r.height()*.60f,size,ink,content,if(w.style=="elegant")"serif" else "sans-serif-light");if(w.style!="minimal")text(canvas,now.format(DateTimeFormatter.ofPattern("EEE, d. MMM",Locale.getDefault())),r.left+pad,r.bottom-pad,base*.47f,ink,content)}}
                 "date"->{round(canvas,r,0xcc282a34.toInt());val now=LocalDateTime.now();text(canvas,now.format(DateTimeFormatter.ofPattern("EEE",Locale.getDefault())).uppercase(),r.left+pad,r.top+r.height()*.35f,base*.4f,ink,content);text(canvas,now.format(DateTimeFormatter.ofPattern("dd.MM.")),r.left+pad,r.bottom-pad,base*.85f,ink,content)}
@@ -144,8 +157,11 @@ class StudioCanvas(c:Context):View(c){
     }
     override fun onTouchEvent(event:MotionEvent):Boolean {val ws=shownProfile().widgets;val x=event.x;val y=event.y
         if(!editing){
-            if(event.actionMasked==MotionEvent.ACTION_DOWN){touchStartX=x;touchStartY=y;smartViews.interact(android.os.SystemClock.elapsedRealtime());return true}
+            if(event.actionMasked==MotionEvent.ACTION_DOWN){touchStartX=x;touchStartY=y;longPressed=false;handler.postDelayed(longPress,android.view.ViewConfiguration.getLongPressTimeout().toLong());smartViews.interact(android.os.SystemClock.elapsedRealtime());return true}
+            if(event.actionMasked==MotionEvent.ACTION_MOVE&&hypot(x-touchStartX,y-touchStartY)>android.view.ViewConfiguration.get(context).scaledTouchSlop)handler.removeCallbacks(longPress)
+            if(event.actionMasked==MotionEvent.ACTION_CANCEL){handler.removeCallbacks(longPress);return true}
             if(event.actionMasked==MotionEvent.ACTION_UP){
+                handler.removeCallbacks(longPress);if(longPressed){performClick();return true}
                 val direction=SmartViews.direction(x-touchStartX,y-touchStartY,StudioUi.dp(context,48).toFloat())
                 if(direction!=null&&(smartViews.opened!=null||forcedProfile!=null||scene.navigation.optBoolean("enabled",false))){smartViews.swipe(direction,scene.navigation,android.os.SystemClock.elapsedRealtime());refresh();performClick();return true}
                 if(smartViews.opened!=null&&x>width-height*.15f&&y<height*.15f){smartViews.close();refresh();performClick();return true}

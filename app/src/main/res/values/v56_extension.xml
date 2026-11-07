@@ -1,0 +1,14 @@
+<resources>
+    <string name="s_gradient_stops">Gradient stops (2–8)</string>
+    <string name="s_gradient_angle">Gradient angle</string>
+    <string name="s_stop_position">Position (%)</string>
+    <string name="s_add_stop">Add colour stop</string>
+    <string name="s_duplicate_stops">Each stop needs a different position.</string>
+    <string name="s_invalid_color">Use #RRGGBB or #AARRGGBB.</string>
+    <string name="s_export_design">Export design with images</string>
+    <string name="s_import_design">Import design</string>
+    <string name="s_export_done">Design exported.</string>
+    <string name="s_archive_failed">Could not read or write the design archive.</string>
+    <string name="s_quick_switcher">Long press for favourite designs (experimental)</string>
+    <string name="s_no_favorite_designs">Mark designs as favourites in My Designs first.</string>
+</resources>

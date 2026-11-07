@@ -29,6 +29,14 @@ class EditorActivity:AppCompatActivity(){
             BackgroundLibrary(this).touch(file);remember();scene.profile(targetProfile).imageOptions=org.json.JSONObject();scene.profile(targetProfile).photo=file.absolutePath;scene.profile(targetProfile).background="photo";changed();canvas.refresh();controls()
         }catch(_:Exception){file.delete();toast("image_failed")}}
     }
+    private var exportSnapshot:StudioScene?=null
+    private val exportDesign=registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")){uri->
+        if(uri!=null)runCatching{contentResolver.openOutputStream(uri)?.use{SceneArchive.export(this,exportSnapshot?:scene,it)}?:error("No output")}.onSuccess{toast("export_done")}.onFailure{toast("archive_failed")}
+        exportSnapshot=null
+    }
+    private val importDesign=registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()){uri->
+        if(uri!=null)runCatching{contentResolver.openInputStream(uri)?.use{SceneArchive.import(this,it,scene)}?:error("No input")}.onSuccess{next->remember();scene=next;selected=null;changed();canvas.refresh();controls()}.onFailure{toast("archive_failed")}
+    }
     private fun t(k:String)=StudioUi.text(this,k)
     private fun label(parent:LinearLayout,k:String,size:Float=14f){parent.addView(StudioUi.label(this,t(k),size))}
     override fun onCreate(saved:Bundle?){super.onCreate(saved);scene=try{saved?.getString("draft")?.let(StudioScene::parse)?:StudioScene.load(this)}catch(_:Exception){StudioScene.defaults()};profile=saved?.getString("profile")?:"normal";selected=saved?.getString("selected");dirty=saved?.getBoolean("dirty")?:false;live=saved?.getBoolean("live")?:false
@@ -55,6 +63,8 @@ class EditorActivity:AppCompatActivity(){
             onReset={remember();scene.geometry=null;canvas.refresh();changed();controls()})}
         body.addView(Switch(this).apply{text=t("camera_guides");setTextColor(StudioUi.TEXT);isChecked=canvas.cameraGuides;setOnCheckedChangeListener{_,value->canvas.cameraGuides=value;canvas.invalidate()}})
         StudioUi.button(this,body,t("design_library")){DesignLibraryDialog.show(this,scene){next->remember();scene=next;selected=null;changed();canvas.refresh();controls()}}
+        StudioUi.button(this,body,t("export_design")){exportSnapshot=scene.copy();exportDesign.launch("RearStudio-design.zip")}
+        StudioUi.button(this,body,t("import_design")){importDesign.launch(arrayOf("application/zip","application/octet-stream"))}
         panel=StudioUi.column(this);body.addView(panel);controls();handler.post(pulse)
         if(saved==null)getSharedPreferences("studio",0).getString("draft",null)?.let{raw->
             runCatching{StudioScene.parse(raw)}.getOrNull()?.let{draft->
@@ -98,6 +108,7 @@ class EditorActivity:AppCompatActivity(){
         if(profile=="charging"){switch(profileBox,"reuse_normal",p.reuseNormal){p.reuseNormal=it};val charge=StudioUi.card(this,panel);label(charge,"charging_display",18f);switch(charge,"charging_enabled",p.chargeEnabled){p.chargeEnabled=it};val styles=listOf("edge","bar","ring","minimal");choice(charge,"style",styles,styles.indexOf(p.chargeStyle).coerceAtLeast(0)){p.chargeStyle=styles[it];if(p.widgets.none{w->w.kind=="battery"})p.widgets.add(StudioWidget(kind="battery",y=.6f,w=.5f,h=.25f));selected=p.widgets.firstOrNull{w->w.kind=="battery"}?.id};val palettes=listOf("solid","gradient","rainbow");choice(charge,"palette",palettes,palettes.indexOf(p.palette).coerceAtLeast(0)){p.palette=palettes[it]};color(charge,"color",p.chargeColor){p.chargeColor=it};if(p.palette=="gradient")color(charge,"second_color",p.chargeColor2){p.chargeColor2=it};slider(charge,"thickness",p.thickness,3,20){p.thickness=it};slider(charge,"opacity",p.chargeOpacity,0,100){p.chargeOpacity=it};switch(charge,"glow",p.glow){p.glow=it};switch(charge,"percentage",p.percentage){p.percentage=it};switch(charge,"animation",p.animation){p.animation=it};slider(charge,"preview_level",canvas.demoLevel?:82,0,100){canvas.demoLevel=it};StudioUi.button(this,charge,t("test_animation")){canvas.animateUntil=System.currentTimeMillis()+2000;canvas.invalidate()}}
         if(profile=="notification")switch(profileBox,"popup",p.popup){p.popup=it}
         val nav=StudioUi.card(this,panel);label(nav,"smart_views",18f);label(nav,"gestures_experimental",12f);switch(nav,"enable_smart_gestures",scene.navigation.optBoolean("enabled",false)){scene.navigation.put("enabled",it)}
+        switch(nav,"quick_switcher",scene.navigation.optBoolean("quickSwitcher",false)){scene.navigation.put("quickSwitcher",it)}
         for(direction in SwipeDirection.entries){val views=listOf("none")+SmartViews.VIEWS;choice(nav,"swipe_"+direction.name.lowercase(),views,views.indexOf(scene.navigation.optString(direction.name,SmartViews.DEFAULTS.getValue(direction))).coerceAtLeast(0)){scene.navigation.put(direction.name,views[it])}}
         val directions=SwipeDirection.entries.map{it.name};choice(nav,"close_gesture",directions,directions.indexOf(scene.navigation.optString("close","DOWN")).coerceAtLeast(0)){scene.navigation.put("close",directions[it])}
         slider(nav,"idle_timeout",scene.navigation.optInt("timeout",30),0,300){scene.navigation.put("timeout",it)}
@@ -127,8 +138,39 @@ class EditorActivity:AppCompatActivity(){
         }
         val w=p.widgets.find{it.id==selected};if(w!=null){val box=StudioUi.card(this,panel);label(box,w.kind,18f);switch(box,"widget_enabled",w.enabled){w.enabled=it};switch(box,"locked",w.locked){w.locked=it;controls()};if(w.locked)return;slider(box,"rotation",w.rotation.toInt(),0,359){w.rotation=it.toFloat()};StudioUi.button(this,box,t("duplicate")){remember();val clone=StudioWidget.read(org.json.JSONObject(w.json().toString()).put("id",java.util.UUID.randomUUID().toString()));if(w.kind=="clock"){toast("one_clock")}else{p.widgets.add(clone);selected=clone.id;changed();controls()}};StudioUi.button(this,box,t("layer_up")){val i=p.widgets.indexOf(w);if(i<p.widgets.lastIndex){remember();java.util.Collections.swap(p.widgets,i,i+1);changed();controls()}};StudioUi.button(this,box,t("layer_down")){val i=p.widgets.indexOf(w);if(i>0){remember();java.util.Collections.swap(p.widgets,i,i-1);changed();controls()}};if(w.kind=="clock"){val styles=listOf("digital","stacked","analog","elegant","minimal");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}};if(w.kind=="notification"){val styles=listOf("compact","card","liquid","gradient","minimal");choice(box,"style",styles,styles.indexOf(w.style).coerceAtLeast(0)){w.style=styles[it]}}
             if(w.kind=="text")StudioUi.button(this,box,t("edit_text")){val input=EditText(this).apply{setText(w.options.optString("text","Text"))};MaterialAlertDialogBuilder(this).setTitle(t("edit_text")).setView(input).setNegativeButton(t("cancel"),null).setPositiveButton(t("done")){_,_->remember();w.options.put("text",input.text.toString().take(1000));changed()}.show()}
-            if(w.kind=="gradient"){val types=listOf("linear","radial","sweep");choice(box,"gradient_type",types,types.indexOf(w.style).coerceAtLeast(0)){w.style=types[it]};color(box,"second_color",w.options.optInt("color2",scene.accent)){w.options.put("color2",it)}}
+            if(w.kind=="gradient"){val types=listOf("linear","radial","sweep");choice(box,"gradient_type",types,types.indexOf(w.style).coerceAtLeast(0)){w.style=types[it]};color(box,"second_color",w.options.optInt("color2",scene.accent)){w.options.put("color2",it)}
+                slider(box,"gradient_angle",w.options.optInt("angle",45),0,359){w.options.put("angle",it)}
+                switch(box,"animation",w.options.optBoolean("animateGradient")){w.options.put("animateGradient",it)}
+                slider(box,"period_ms",w.options.optLong("period",5000).toInt().coerceIn(500,60000),500,60000){w.options.put("period",it)}
+                StudioUi.button(this,box,t("gradient_stops")){gradientStops(w)}
+            }
             StudioUi.button(this,box,t("eyedropper")){PixelPicker.show(this,canvas,w.color){picked->remember();w.color=picked;changed();controls()}};color(box,"color",w.color){w.color=it};coordinate(box,"width",w.w,true){w.w=it};coordinate(box,"height",w.h,true){w.h=it};coordinate(box,"position_x",w.x){w.x=it};coordinate(box,"position_y",w.y){w.y=it};slider(box,"opacity",w.opacity,0,100){w.opacity=it};StudioUi.button(this,box,"× "+t("remove_widget")){remember();p.widgets.remove(w);selected=null;changed();controls()}}
+    }
+    private fun gradientStops(widget:StudioWidget){
+        val stops=GradientSpec.read(widget).stops.toMutableList()
+        val box=StudioUi.column(this)
+        val dialog=MaterialAlertDialogBuilder(this).setTitle(t("gradient_stops")).setView(ScrollView(this).apply{addView(box)}).setNegativeButton(t("cancel"),null).setPositiveButton(t("save"),null).create()
+        fun render(){
+            box.removeAllViews()
+            stops.toList().forEachIndexed{i,stop->
+                val row=StudioUi.card(this,box)
+                row.addView(StudioUi.label(this,"${i+1} · ${(stop.position*100).toInt()} %"))
+                val position=EditText(this).apply{inputType=android.text.InputType.TYPE_CLASS_NUMBER;setText((stop.position*100).toInt().toString());contentDescription=t("stop_position")}
+                row.addView(position)
+                position.addTextChangedListener(object:TextWatcher{override fun beforeTextChanged(s:CharSequence?,a:Int,c:Int,f:Int){};override fun onTextChanged(s:CharSequence?,a:Int,b:Int,c:Int){s?.toString()?.toIntOrNull()?.takeIf{it in 0..100}?.let{stops[i]=stops[i].copy(position=it/100f)}};override fun afterTextChanged(e:Editable?){} })
+                val hex=EditText(this).apply{setText(String.format("#%08X",stop.color));contentDescription=t("color")};row.addView(hex)
+                hex.addTextChangedListener(object:TextWatcher{override fun beforeTextChanged(s:CharSequence?,a:Int,c:Int,f:Int){};override fun onTextChanged(s:CharSequence?,a:Int,b:Int,c:Int){runCatching{Color.parseColor(s.toString())}.onSuccess{stops[i]=stops[i].copy(color=it)}.onFailure{hex.error=t("invalid_color")}};override fun afterTextChanged(e:Editable?){} })
+                if(stops.size>2)StudioUi.button(this,row,t("remove_widget")){stops.removeAt(i);render()}
+            }
+            if(stops.size<8)StudioUi.button(this,box,t("add_stop")){
+                val sorted=stops.sortedBy{it.position};val pair=sorted.zipWithNext().maxBy{it.second.position-it.first.position}
+                stops.add(GradientStop((pair.first.position+pair.second.position)/2,scene.accent));render()
+            }
+        }
+        dialog.setOnShowListener{dialog.getButton(-1).setOnClickListener{
+            if(stops.map{it.position}.distinct().size!=stops.size){toast("duplicate_stops");return@setOnClickListener}
+            remember();GradientSpec.write(widget,stops);changed();controls();dialog.dismiss()
+        }};render();dialog.show()
     }
     private fun addWidget(){val sheet=BottomSheetDialog(this);val box=StudioUi.column(this).apply{setPadding(24,24,24,32)};box.addView(StudioUi.label(this,t("add_widget"),22f));listOf("clock","date","battery","music","football","f1","notification","gradient","text").forEach{kind->StudioUi.button(this,box,t(kind)){val p=scene.profile(profile);if(kind=="clock"&&p.widgets.any{it.kind=="clock"}){toast("one_clock");return@button};if(p.widgets.size>=128){toast("widget_limit");return@button};remember();val w=StudioWidget(kind=kind,y=.25f,h=if(kind=="music").6f else .32f,color=scene.accent);p.widgets.add(w);selected=w.id;changed();controls();sheet.dismiss()}};sheet.setContentView(box);sheet.show()}
     private fun background(){val p=scene.profile(profile);val box=StudioUi.column(this);val types=listOf("gradient","solid","photo","gallery");choice(box,"background",types,types.indexOf(p.background).coerceAtLeast(0)){p.background=types[it]};color(box,"color",p.color){p.color=it};color(box,"second_color",p.color2){p.color2=it};slider(box,"dimming",p.dim,0,90){p.dim=it};StudioUi.button(this,box,t("choose_photo")){photo.launch(arrayOf("image/*"))};StudioUi.button(this,box,t("my_backgrounds")){BackgroundLibraryDialog.show(this){path->remember();p.photo=path;p.background="photo";p.imageOptions=org.json.JSONObject();changed();canvas.refresh()}};
