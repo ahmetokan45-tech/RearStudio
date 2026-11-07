@@ -52,7 +52,7 @@ class DesignLibraryTest {
     @Test fun extendedWidgetPropertiesAndSmartProfilesRoundTrip() {
         val scene=StudioScene.defaults();val w=scene.profile("normal").widgets.first()
         w.locked=true;w.rotation=47f;w.options.put("text","Türkçe العربية")
-        scene.profile("smart_music").widgets.add(StudioWidget(kind="music"))
+        scene.profile("smart_music").widgets.clear();scene.profile("smart_music").widgets.add(StudioWidget(kind="music"))
         val copy=scene.copy();val found=copy.profile("normal").widgets.first()
         assertTrue(found.locked);assertEquals(47f,found.rotation,0f)
         assertEquals("Türkçe العربية",found.options.getString("text"))

@@ -26,9 +26,9 @@ object GeometryDialog {
         val corners=listOf("corner_tl","corner_tr","corner_br","corner_bl").mapIndexed{i,key->field(t(key)+" (px)",geometry.corners[i])}
         val enabled=Switch(context).apply{text=t("calibrate_lenses");isChecked=geometry.lenses.size==2};box.addView(enabled)
         val lenses=(0..1).map{i->
-            val lens=geometry.lenses.getOrNull(i)?:LensCircle(geometry.width*.15f,geometry.height*(if(i==0).27f else .72f),geometry.width*.075f)
+            val lens=geometry.lenses.getOrNull(i)
             val prefix=t("camera_lens")+" ${i+1} · "
-            listOf(field(prefix+"X (px)",lens.x),field(prefix+"Y (px)",lens.y),field(prefix+t("radius")+" (px)",lens.radius))
+            listOf(field(prefix+"X (px)",lens?.x?:0f),field(prefix+"Y (px)",lens?.y?:0f),field(prefix+t("radius")+" (px)",lens?.radius?:0f)).also{row->if(lens==null)row.forEach{it.setText("")}}
         }
         fun lensFields(){lenses.flatten().forEach{it.isEnabled=enabled.isChecked}}
         enabled.setOnCheckedChangeListener{_,_->lensFields()};lensFields()

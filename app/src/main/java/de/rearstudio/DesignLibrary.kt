@@ -53,6 +53,7 @@ class DesignLibrary(context: Context) {
                 for ((key, profile) in profiles) {
                     val source = candidate.profiles[key] ?: candidate.profile("normal")
                     profile.background = source.background; profile.photo = source.photo
+                    profile.imageOptions = JSONObject(source.imageOptions.toString())
                     profile.color = source.color; profile.color2 = source.color2; profile.dim = source.dim
                 }
             }

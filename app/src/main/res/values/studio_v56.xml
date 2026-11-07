@@ -68,4 +68,16 @@
     <string name="s_DOWN">Down</string>
     <string name="s_LEFT">Left</string>
     <string name="s_RIGHT">Right</string>
+    <string name="s_eyedropper">Eyedropper</string>
+    <string name="s_sample_composite">Tap rendered image · includes compositing</string>
+    <string name="s_my_backgrounds">My backgrounds</string>
+    <string name="s_no_backgrounds">Import an image first</string>
+    <string name="s_background_apply_hint">Use this image in the current draft. Widgets are preserved.</string>
+    <string name="s_image_scale">Image scale (%)</string>
+    <string name="s_image_pan_x">Horizontal crop position</string>
+    <string name="s_image_pan_y">Vertical crop position</string>
+    <string name="s_image_brightness">Image brightness</string>
+    <string name="s_image_contrast">Image contrast (%)</string>
+    <string name="s_image_saturation">Saturation (%)</string>
+    <string name="s_reset_image">Reset image adjustments</string>
 </resources>

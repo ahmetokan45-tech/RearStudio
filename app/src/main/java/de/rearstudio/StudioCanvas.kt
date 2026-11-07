@@ -32,6 +32,7 @@ class StudioCanvas(c:Context):View(c){
     var previewPlaying=true
     private var animationStarted=android.os.SystemClock.elapsedRealtime()
     private var pausedAt=0L
+    private var previousAnimationProfile=""
     fun playback(playing:Boolean){
         if(playing==previewPlaying)return
         val now=android.os.SystemClock.elapsedRealtime()
@@ -76,10 +77,20 @@ class StudioCanvas(c:Context):View(c){
     private fun round(canvas:Canvas,r:RectF,color:Int,radius:Float=height*.04f){p.apply{this.color=color;style=Paint.Style.FILL;shader=null;alpha=255};canvas.drawRoundRect(r,radius,radius,p)}
     override fun onDraw(canvas:Canvas){super.onDraw(canvas);if(width==0||height==0)return;p.reset();p.isAntiAlias=true;val profile=profile();val shown=shownProfile();val scale=height/596f;val base=height*.065f;val key=profileKey();val level=demoLevel?:battery
         canvas.save();canvas.clipPath(geometry().outline(width.toFloat(),height.toFloat()))
-        when(shown.background){"gallery"->{};"solid"->canvas.drawColor(shown.color);"photo"->{canvas.drawColor(0xff151720.toInt());image?.let{val iw=it.intrinsicWidth.coerceAtLeast(1);val ih=it.intrinsicHeight.coerceAtLeast(1);val f=max(width.toFloat()/iw,height.toFloat()/ih);it.setBounds(((width-iw*f)/2).toInt(),((height-ih*f)/2).toInt(),((width+iw*f)/2).toInt(),((height+ih*f)/2).toInt());it.draw(canvas)}};else->{p.shader=LinearGradient(0f,0f,width.toFloat(),height.toFloat(),shown.color,shown.color2,Shader.TileMode.CLAMP);canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),p);p.shader=null}}
+        when(shown.background){"gallery"->{};"solid"->canvas.drawColor(shown.color);"photo"->{canvas.drawColor(0xff151720.toInt());image?.let{val iw=it.intrinsicWidth.coerceAtLeast(1);val ih=it.intrinsicHeight.coerceAtLeast(1);val f=max(width.toFloat()/iw,height.toFloat()/ih)*shown.imageOptions.optInt("scale",100).coerceIn(100,300)/100f
+            val xx=(width-iw*f)/2+shown.imageOptions.optInt("panX",0).coerceIn(-100,100)/100f*(iw*f-width)/2
+            val yy=(height-ih*f)/2+shown.imageOptions.optInt("panY",0).coerceIn(-100,100)/100f*(ih*f-height)/2
+            it.setBounds(xx.toInt(),yy.toInt(),(xx+iw*f).toInt(),(yy+ih*f).toInt())
+            val contrast=shown.imageOptions.optInt("contrast",100).coerceIn(0,200)/100f
+            val offset=shown.imageOptions.optInt("brightness",0).coerceIn(-100,100)*2.55f+128*(1-contrast)
+            val matrix=ColorMatrix().apply{setSaturation(shown.imageOptions.optInt("saturation",100).coerceIn(0,200)/100f);postConcat(ColorMatrix(floatArrayOf(contrast,0f,0f,0f,offset,0f,contrast,0f,0f,offset,0f,0f,contrast,0f,offset,0f,0f,0f,1f,0f)))}
+            it.colorFilter=ColorMatrixColorFilter(matrix);it.draw(canvas)}};else->{p.shader=LinearGradient(0f,0f,width.toFloat(),height.toFloat(),shown.color,shown.color2,Shader.TileMode.CLAMP);canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),p);p.shader=null}}
         if(shown.dim>0)canvas.drawColor(Color.argb(shown.dim*255/100,0,0,0))
         if(!profile.enabled&&editing){text(canvas,StudioUi.text(context,"profile_off"),width*.4f,height*.5f,base,Color.WHITE,width*.5f)}
-        if(profile.enabled||editing)for(w in shown.widgets){if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save();canvas.rotate(w.rotation,r.centerX(),r.centerY());canvas.saveLayerAlpha(r,if(w.enabled)w.opacity*255/100 else 50)
+        if(profile.enabled||editing)for(w in shown.widgets){if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save()
+            val g=geometry()
+            for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.clipOutPath(Path().apply{addOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),Path.Direction.CW)})}
+            canvas.rotate(w.rotation,r.centerX(),r.centerY());canvas.saveLayerAlpha(r,if(w.enabled)w.opacity*255/100 else 50)
             val ink=w.color;val pad=height*.035f;val content=r.width()-2*pad
             when(w.kind){
                 "unavailable"->text(canvas,StudioUi.text(context,"data_source_unverified"),r.left,r.centerY(),base*.42f,ink,r.width())
@@ -116,6 +127,7 @@ class StudioCanvas(c:Context):View(c){
             round(canvas,close,0xdd151720.toInt());text(canvas,"×",close.centerX(),close.centerY()+height*.025f,height*.08f,Color.WHITE,close.width(),align=Paint.Align.CENTER)
         }
         val reducedMotion=context.getSystemService(android.os.PowerManager::class.java)?.isPowerSaveMode==true||!android.animation.ValueAnimator.areAnimatorsEnabled()
+        if(previousAnimationProfile!=key){previousAnimationProfile=key;restartAnimation()}
         val time=(if(previewPlaying)android.os.SystemClock.elapsedRealtime() else pausedAt)-animationStarted
         CameraLightRenderer.draw(canvas,geometry(),width,height,profile.cameraLight,time,reducedMotion)
         if(profile.cameraLight.enabled&&geometry().lenses.size==2&&previewPlaying&&!reducedMotion&&isShown&&windowVisibility==VISIBLE&&profile.cameraLight.effect!="static")postInvalidateDelayed(33)

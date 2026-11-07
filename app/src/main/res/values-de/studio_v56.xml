@@ -68,4 +68,16 @@
     <string name="s_DOWN">Nach unten</string>
     <string name="s_LEFT">Nach links</string>
     <string name="s_RIGHT">Nach rechts</string>
+    <string name="s_eyedropper">Pipette</string>
+    <string name="s_sample_composite">Gerendertes Bild antippen · inklusive Transparenz</string>
+    <string name="s_my_backgrounds">Meine Hintergründe</string>
+    <string name="s_no_backgrounds">Zuerst ein Bild importieren</string>
+    <string name="s_background_apply_hint">Bild im aktuellen Entwurf verwenden. Widgets bleiben erhalten.</string>
+    <string name="s_image_scale">Bildgröße (%)</string>
+    <string name="s_image_pan_x">Bildausschnitt horizontal</string>
+    <string name="s_image_pan_y">Bildausschnitt vertikal</string>
+    <string name="s_image_brightness">Bildhelligkeit</string>
+    <string name="s_image_contrast">Bildkontrast (%)</string>
+    <string name="s_image_saturation">Sättigung (%)</string>
+    <string name="s_reset_image">Bildanpassungen zurücksetzen</string>
 </resources>
