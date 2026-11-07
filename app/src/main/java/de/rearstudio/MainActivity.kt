@@ -68,8 +68,21 @@ class MainActivity:AppCompatActivity(){
         box.addView(Switch(this).apply{text=t("notifications_enabled");setTextColor(StudioUi.TEXT);isChecked=NotificationSettings.isEnabled(this@MainActivity);setOnCheckedChangeListener{_,on->NotificationSettings.setEnabled(this@MainActivity,on);RearNotificationListener.switched(this@MainActivity,on);KeeperService.start(this@MainActivity,KeeperService.ACTION_UPDATE)}})
         StudioUi.button(this,box,t("notification_apps")){apps()};StudioUi.button(this,box,t("notification_access")){de.rearstudio.notifications.NotificationAccess.openSettings(this)}
         box.addView(Switch(this).apply{text=t("open_rear");setTextColor(StudioUi.TEXT);isChecked=prefs.getBoolean("notification_rear",true);setOnCheckedChangeListener{_,on->prefs.edit().putBoolean("notification_rear",on).apply()}})
+        StudioUi.button(this,box,t("notification_per_app")){notificationAppearance()}
         StudioUi.button(this,box,t("notification_design")){startActivity(Intent(this,EditorActivity::class.java))}
         StudioUi.button(this,box,t("notification_options")){startActivity(Intent(this,DisplayActivity::class.java))}
+    }
+    private fun notificationAppearance(){
+        val apps=packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),PackageManager.ResolveInfoFlags.of(0)).map{it.activityInfo.applicationInfo}.distinctBy{it.packageName}.sortedBy{packageManager.getApplicationLabel(it).toString().lowercase()}
+        MaterialAlertDialogBuilder(this).setTitle(t("notification_per_app")).setItems(apps.map{packageManager.getApplicationLabel(it).toString()}.toTypedArray()){_,index->
+            val app=apps[index]
+            MaterialAlertDialogBuilder(this).setTitle(packageManager.getApplicationLabel(app)).setItems((NotificationAppearance.styles.map(::t)+t("reset_image")).toTypedArray()){_,style->
+                if(style==NotificationAppearance.styles.size){NotificationAppearance.clear(this,app.packageName)}else{
+                    val colors=listOf(0xffe6bd77.toInt(),0xff8cb4d8.toInt(),0xffc292a3.toInt(),0xff9fcbb5.toInt(),0xfff3f3f5.toInt(),StudioScene.load(this).accent)
+                    MaterialAlertDialogBuilder(this).setTitle(t("color")).setItems(colors.map{String.format("#%06X",it and 0xffffff)}.toTypedArray()){_,color->NotificationAppearance.save(this,app.packageName,NotificationAppearance.styles[style],colors[color])}.show()
+                }
+            }.show()
+        }.show()
     }
     private fun apps(){val intent=Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);val apps=packageManager.queryIntentActivities(intent,PackageManager.ResolveInfoFlags.of(0)).map{it.activityInfo.applicationInfo}.distinctBy{it.packageName}.filter{it.packageName!=packageName}.sortedBy{packageManager.getApplicationLabel(it).toString().lowercase()};val allowed=prefs.getStringSet("notification_apps",emptySet())!!.toMutableSet();val filter=prefs.getBoolean("notification_filter",false);val checked=BooleanArray(apps.size){!filter||allowed.contains(apps[it].packageName)}
         MaterialAlertDialogBuilder(this).setTitle(t("notification_apps")).setMultiChoiceItems(apps.map{packageManager.getApplicationLabel(it).toString()}.toTypedArray(),checked){_,i,v->checked[i]=v}.setNegativeButton(t("cancel"),null).setPositiveButton(t("save")){_,_->prefs.edit().putBoolean("notification_filter",true).putStringSet("notification_apps",apps.filterIndexed{i,_->checked[i]}.map{it.packageName}.toSet()).apply();de.rearstudio.rear.RearHostActivity.notificationsChanged()}.show()

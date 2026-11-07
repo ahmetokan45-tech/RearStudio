@@ -29,6 +29,8 @@ apps' rear-display services concurrently. No existing installation is uninstalle
   and converted to separate PNG originals on first library use; not pixel-matched to concepts.
 - Background deletion checks active design, draft, preview, recovery and saved designs.
 - Independent camera-light fade-in/fade-out, glow and thickness.
+- Editor group movement and two-finger scale/rotation; individual locked widgets stay fixed.
+- Per-app notification card style and colour overrides without mutating saved scene widgets.
 - GitHub prerelease publication runs only after build/test/lint/signature checks succeed.
 
 ## Earlier implementation (retained)
@@ -66,9 +68,9 @@ apps' rear-display services concurrently. No existing installation is uninstalle
   subcomponents, multi-day weather, health history, workout/distance/calorie modules.
 - Arial redistribution license; per-clock-part font/weight and complete text spacing/alignment.
 - Background blur/filter presets and grid/single preview; premium visual review against references.
-- Grouping, multi-touch transforms, 2–8-stop keyframe timeline, blend modes and animation export.
+- Group scaling/rotation as a unit, keyframe timeline, blend modes and animation export.
 - Animated favourite carousel, mini-gesture acceptance on hardware.
-- Per-app notification card settings, stacking/priority, independently positioned card
+- Notification stacking/priority, independently positioned card
   parts, side-by-side light comparison and additional transitions.
 - Full nine-language localization and accessibility. New controls currently EN/DE/TR only.
 - Hardware diagnosis, timed rollback, original Xiaomi-mode return, display-off/reboot,

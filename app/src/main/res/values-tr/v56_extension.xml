@@ -50,4 +50,7 @@
     <string name="s_fade_in">Belirme (ms)</string>
     <string name="s_fade_out">Sönme (ms)</string>
 <string name="s_elements">Öğeler</string>
+    <string name="s_group_widgets">Taşımak için widgetları grupla</string>
+    <string name="s_ungroup">Grubu çöz</string>
+    <string name="s_notification_per_app">Uygulamaya göre bildirim stili</string>
 </resources>

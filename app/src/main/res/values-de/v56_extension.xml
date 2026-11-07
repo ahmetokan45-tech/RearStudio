@@ -50,4 +50,7 @@
     <string name="s_fade_in">Einblenden (ms)</string>
     <string name="s_fade_out">Ausblenden (ms)</string>
 <string name="s_elements">Elemente</string>
+    <string name="s_group_widgets">Widgets zum Verschieben gruppieren</string>
+    <string name="s_ungroup">Gruppierung aufheben</string>
+    <string name="s_notification_per_app">Benachrichtigungsstil je App</string>
 </resources>

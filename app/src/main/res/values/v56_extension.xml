@@ -50,4 +50,7 @@
     <string name="s_fade_in">Fade in (ms)</string>
     <string name="s_fade_out">Fade out (ms)</string>
 <string name="s_elements">Elements</string>
+    <string name="s_group_widgets">Group widgets for moving</string>
+    <string name="s_ungroup">Ungroup</string>
+    <string name="s_notification_per_app">Notification style per app</string>
 </resources>

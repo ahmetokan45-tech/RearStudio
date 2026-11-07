@@ -57,6 +57,9 @@ class StudioCanvas(c:Context):View(c){
     fun geometry()=scene.geometry?:detectedGeometry
     private val p=Paint(Paint.ANTI_ALIAS_FLAG);private val textPaint=TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val handler=Handler(Looper.getMainLooper());private var battery=82;private var charging=false;private var pluggedAt=0L
+    private var groupOrigins=emptyMap<String,Pair<Float,Float>>()
+    private var pinchDistance=0f;private var pinchAngle=0f;private var pinchRotation=0f
+    private var pinchCenterX=0f;private var pinchCenterY=0f
     private var drag:String?=null;private var resize=false;private var dx=0f;private var dy=0f;private var oldX=0f;private var oldY=0f;private var oldW=0f;private var oldH=0f;private var moved=false
     private var artwork:Bitmap?=null;private var song="";private var artist="";private var media:android.media.session.MediaController?=null
     private var image:Drawable?=null;private var imageKey="";private val imageLoader=java.util.concurrent.Executors.newSingleThreadExecutor();private var attached=false;private var loaded=false
@@ -103,7 +106,7 @@ class StudioCanvas(c:Context):View(c){
             it.colorFilter=ColorMatrixColorFilter(matrix);it.draw(canvas)}};else->{p.shader=LinearGradient(0f,0f,width.toFloat(),height.toFloat(),shown.color,shown.color2,Shader.TileMode.CLAMP);canvas.drawRect(0f,0f,width.toFloat(),height.toFloat(),p);p.shader=null}}
         if(shown.dim>0)canvas.drawColor(Color.argb(shown.dim*255/100,0,0,0))
         if(!profile.enabled&&editing){text(canvas,StudioUi.text(context,"profile_off"),width*.4f,height*.5f,base,Color.WHITE,width*.5f)}
-        if(profile.enabled||editing)for(original in shown.widgets){val w=RotationSpec.shown(original,android.os.SystemClock.elapsedRealtime()-animationStarted,rotationPositions[original.id]);if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save()
+        if(profile.enabled||editing)for(original in shown.widgets){val rotated=RotationSpec.shown(original,android.os.SystemClock.elapsedRealtime()-animationStarted,rotationPositions[original.id]);val w=if(rotated.kind=="notification")NotificationAppearance.apply(context,rotated,RearNotificationListener.recent().firstOrNull()?.packageName)else rotated;if(!w.enabled&&!editing)continue;val r=rect(w);canvas.save()
             val g=geometry()
             for(lens in g.lenses){val sx=width/g.width;val sy=height/g.height;canvas.clipOutPath(Path().apply{addOval(RectF((lens.x-lens.radius)*sx,(lens.y-lens.radius)*sy,(lens.x+lens.radius)*sx,(lens.y+lens.radius)*sy),Path.Direction.CW)})}
             canvas.rotate(w.rotation,r.centerX(),r.centerY());canvas.saveLayerAlpha(r,if(w.enabled)w.opacity*255/100 else 50)
@@ -207,9 +210,24 @@ class StudioCanvas(c:Context):View(c){
                 if(smartViews.opened!=null&&x>width-height*.15f&&y<height*.15f){smartViews.close();refresh();performClick();return true}
 val original=ws.lastOrNull{it.enabled&&hit(it,x,y)}?:return false;val w=RotationSpec.shown(original,android.os.SystemClock.elapsedRealtime()-animationStarted,rotationPositions[original.id]);if(w.kind=="notification"){RearNotificationListener.recent().firstOrNull()?.let{NotificationOpen.open(context,it.key)};return true};if(w.kind=="music"){val r=rect(w);if(y>r.top+r.height()*.6f){try{val controls=media?.transportControls;when(((x-r.left)/r.width()*3).toInt().coerceIn(0,2)){0->controls?.skipToPrevious();1->if(media?.playbackState?.state==android.media.session.PlaybackState.STATE_PLAYING)controls?.pause() else controls?.play();2->controls?.skipToNext()}}catch(_:RuntimeException){};invalidate();return true}}};return true}
         when(event.actionMasked){MotionEvent.ACTION_DOWN->{if(profileKey()=="charging"&&profile().chargeEnabled&&profile().chargeStyle=="edge"&&hypot(x-(width-height*.045f),y-height*.045f)<StudioUi.dp(context,18)){onBeforeChange?.invoke();profile().chargeEnabled=false;onChanged?.invoke();invalidate();return true};val current=ws.find{it.id==selected};val tolerance=StudioUi.dp(context,18).toFloat();if(current!=null&&!current.locked){val r=rect(current);if(hypot(x-r.right,y-r.top)<tolerance){onDelete?.invoke(current.id);return true};resize=hypot(x-r.right,y-r.bottom)<tolerance}
-            val target=if(resize)current else ws.asReversed().firstOrNull{hit(it,x,y)};selected=target?.id;onSelect?.invoke(target);if(target==null||target.locked){invalidate();return true};onBeforeChange?.invoke();drag=target.id;dx=x;dy=y;oldX=target.x;oldY=target.y;oldW=target.w;oldH=target.h;moved=false;parent?.requestDisallowInterceptTouchEvent(true);invalidate()}
-            MotionEvent.ACTION_MOVE->{val w=ws.find{it.id==drag}?:return true;val xx=(x-dx)/width;val yy=(y-dy)/height;if(resize){w.w=oldW+xx;w.h=oldH+yy}else{w.x=oldX+xx;w.y=oldY+yy};w.constrain();moved=true;invalidate()}
-            MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL->{drag=null;resize=false;parent?.requestDisallowInterceptTouchEvent(false);if(moved)onChanged?.invoke();performClick()}
+            val target=if(resize)current else ws.asReversed().firstOrNull{hit(it,x,y)};selected=target?.id;onSelect?.invoke(target);if(target==null||target.locked){invalidate();return true};onBeforeChange?.invoke();drag=target.id
+            val group=target.options.optString("group","")
+            groupOrigins=ws.filter{!it.locked&&(it.id==target.id||(group.isNotBlank()&&it.options.optString("group","")==group))}.associate{it.id to (it.x to it.y)}
+            dx=x;dy=y;oldX=target.x;oldY=target.y;oldW=target.w;oldH=target.h;moved=false;parent?.requestDisallowInterceptTouchEvent(true);invalidate()}
+            MotionEvent.ACTION_POINTER_DOWN->{
+                val w=ws.find{it.id==drag&&!it.locked}?:return true
+                if(event.pointerCount==2){pinchDistance=hypot(event.getX(1)-event.getX(0),event.getY(1)-event.getY(0)).coerceAtLeast(1f);pinchAngle=atan2(event.getY(1)-event.getY(0),event.getX(1)-event.getX(0));pinchRotation=w.rotation;oldW=w.w;oldH=w.h;pinchCenterX=w.x+w.w/2;pinchCenterY=w.y+w.h/2}
+            }
+            MotionEvent.ACTION_POINTER_UP->{pinchDistance=0f;drag=null;groupOrigins=emptyMap();if(moved)onChanged?.invoke()}
+            MotionEvent.ACTION_MOVE->{val w=ws.find{it.id==drag}?:return true
+                if(event.pointerCount==2&&pinchDistance>0){
+                    val distance=hypot(event.getX(1)-event.getX(0),event.getY(1)-event.getY(0));val factor=(distance/pinchDistance).coerceIn(.05f,20f)
+                    w.w=oldW*factor;w.h=oldH*factor;w.x=pinchCenterX-w.w/2;w.y=pinchCenterY-w.h/2
+                    w.rotation=pinchRotation+(atan2(event.getY(1)-event.getY(0),event.getX(1)-event.getX(0))-pinchAngle)*180f/Math.PI.toFloat()
+                }else{val xx=(x-dx)/width;val yy=(y-dy)/height;if(resize){w.w=oldW+xx;w.h=oldH+yy}else{for(member in ws){groupOrigins[member.id]?.let{origin->member.x=origin.first+xx;member.y=origin.second+yy}}}}
+                w.constrain();moved=true;invalidate()
+            }
+            MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL->{drag=null;resize=false;pinchDistance=0f;groupOrigins=emptyMap();parent?.requestDisallowInterceptTouchEvent(false);if(moved)onChanged?.invoke();performClick()}
         };return true
     }
     override fun performClick():Boolean{super.performClick();return true}
