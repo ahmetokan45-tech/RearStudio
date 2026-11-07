@@ -24,6 +24,12 @@ class V56RenderTest {
         profile.widgets.add(StudioWidget(kind="gradient",x=0f,y=0f,w=1f,h=1f,color=Color.RED).apply{options.put("color2",Color.RED)})
         val bitmap=render(view);assertEquals(Color.BLACK,bitmap.getPixel(120,150));assertEquals(Color.BLACK,bitmap.getPixel(120,440));assertEquals(Color.RED,bitmap.getPixel(500,300));bitmap.recycle();view.dispose()
     }
+    @Test fun translucentCardsPreserveUnderlyingBackground(){
+        val view=StudioCanvas(context);val profile=view.scene.profile("normal");profile.widgets.clear();profile.background="solid";profile.color=Color.BLACK;profile.dim=0
+        profile.widgets.add(StudioWidget(kind="notification",style="liquid",x=.35f,y=.1f,w=.6f,h=.8f))
+        val bitmap=render(view);val pixel=bitmap.getPixel(850,200)
+        assertTrue(Color.red(pixel) in 1..42);assertTrue(Color.blue(pixel) in 1..55);assertEquals(255,Color.alpha(pixel));bitmap.recycle();view.dispose()
+    }
     @Test fun multiplyBlendComposesAgainstBackground(){
         val view=StudioCanvas(context);val profile=view.scene.profile("normal");profile.widgets.clear();profile.background="solid";profile.color=Color.BLUE;profile.dim=0
         profile.widgets.add(StudioWidget(kind="gradient",x=.35f,y=.1f,w=.6f,h=.8f,color=Color.RED).apply{options.put("color2",Color.RED).put("blend","multiply")})

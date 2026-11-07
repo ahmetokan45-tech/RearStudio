@@ -93,7 +93,7 @@ class StudioCanvas(c:Context):View(c){
     private var activeFont:String?=null
     private var activeTypefaceStyle=Typeface.NORMAL
     private fun text(canvas:Canvas,value:String,x:Float,y:Float,size:Float,color:Int,maxWidth:Float=width.toFloat(),font:String="sans-serif",align:Paint.Align=Paint.Align.LEFT){textPaint.apply{this.color=color;textSize=size;typeface=StudioFonts.get(context,activeFont?:font,activeTypefaceStyle);textAlign=align;shader=null};val v=android.text.TextUtils.ellipsize(value,textPaint,maxWidth.coerceAtLeast(1f),android.text.TextUtils.TruncateAt.END).toString();canvas.drawText(v,x,y,textPaint)}
-    private fun round(canvas:Canvas,r:RectF,color:Int,radius:Float=height*.04f){p.apply{this.color=color;style=Paint.Style.FILL;shader=null;alpha=255};canvas.drawRoundRect(r,radius,radius,p)}
+    private fun round(canvas:Canvas,r:RectF,color:Int,radius:Float=height*.04f){p.apply{this.color=color;style=Paint.Style.FILL;shader=null;alpha=Color.alpha(color)};canvas.drawRoundRect(r,radius,radius,p)}
     override fun onDraw(canvas:Canvas){super.onDraw(canvas);if(width==0||height==0)return;p.reset();p.isAntiAlias=true;val profile=profile();val shown=shownProfile();val scale=height/596f;val base=height*.065f;val key=profileKey();val level=demoLevel?:battery
         if(previousAnimationProfile!=key){previousAnimationProfile=key;restartAnimation()}
         canvas.save();canvas.clipPath(geometry().outline(width.toFloat(),height.toFloat()))
@@ -145,7 +145,7 @@ class StudioCanvas(c:Context):View(c){
                     if(w.options.optBoolean("showGoal",true))text(canvas,"/ "+java.text.NumberFormat.getIntegerInstance().format(goal),r.left+pad,r.top+r.height()*.57f,base*.38f,ink,content)
                     if(w.options.optBoolean("showChart",true)){
                         val week=ActivityData.week(context);val max=maxOf(goal.toLong(),week.filterNotNull().maxOrNull()?:1L)
-                        val bw=content/10;week.forEachIndexed{i,v->val left=r.left+pad+i*content/7;p.color=if(v==null)0xff40434b.toInt() else ink;canvas.drawRoundRect(RectF(left,r.top+r.height()*.8f-(v?:0)*r.height()*.18f/max,left+bw,r.top+r.height()*.8f),bw/3,bw/3,p)}
+                        val bw=content/10;week.forEachIndexed{i,v->val left=r.left+pad+i*content/7;p.color=if(v==null)0xff40434b.toInt() else ink;val barHeight=maxOf(height*.004f,(v?:0)*r.height()*.18f/max);canvas.drawRoundRect(RectF(left,r.top+r.height()*.8f-barHeight,left+bw,r.top+r.height()*.8f),bw/3,bw/3,p);text(canvas,java.time.LocalDate.now().minusDays((6-i).toLong()).format(DateTimeFormatter.ofPattern("EE",Locale.getDefault())),left,r.top+r.height()*.86f,base*.22f,0xffbec2cb.toInt(),bw)}
                     }
                     text(canvas,StudioUi.text(context,if(ActivityData.available(context))"steps_observed" else "activity_access"),r.left+pad,r.bottom-pad,base*.28f,0xffbfc2ca.toInt(),content)
                 }
