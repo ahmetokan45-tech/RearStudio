@@ -123,14 +123,34 @@ class StudioCanvas(c:Context):View(c){
             val ink=w.color;val pad=height*.035f;val content=r.width()-2*pad
             when(w.kind){
                 "weather"->{
-                    round(canvas,r,if(w.style=="liquid")0x663c424d else 0xff1b1e25.toInt())
+                    val glass=w.style=="liquid"
+                    val gradient=w.style=="gradient"
+                    val accent=when {glass->0xff73dff6.toInt();gradient->0xffffb078.toInt();else->0xffffa43c.toInt()}
+                    p.style=Paint.Style.FILL
+                    p.shader=LinearGradient(r.left,r.top,r.right,r.bottom,
+                        when {glass->intArrayOf(0xff28445b.toInt(),0xff101c30.toInt());gradient->intArrayOf(0xff5b2b48.toInt(),0xff25182e.toInt());else->intArrayOf(0xff283240.toInt(),0xff0d121b.toInt())},
+                        null,Shader.TileMode.CLAMP)
+                    canvas.drawRoundRect(r,height*.045f,height*.045f,p);p.shader=null
+                    p.style=Paint.Style.STROKE;p.strokeWidth=maxOf(1f,height*.002f)
+                    p.color=when {glass->0xff527e9a.toInt();gradient->0xff925c75.toInt();else->0xff4d5a6c.toInt()}
+                    canvas.drawRoundRect(r,height*.045f,height*.045f,p);p.style=Paint.Style.FILL
                     val weather=WeatherData.read(context)
-                    if(weather==null){text(canvas,StudioUi.text(context,"weather_setup"),r.left+pad,r.centerY(),base*.4f,ink,content)}else{
-                        text(canvas,String.format(Locale.getDefault(),"%.1f °C",weather.temperature),r.left+pad,r.top+r.height()*.35f,min(base*1.3f,r.height()*.28f),ink,content)
-                        text(canvas,StudioUi.text(context,WeatherData.condition(weather.code)),r.left+pad,r.top+r.height()*.52f,base*.5f,ink,content)
-                        if(w.options.optBoolean("showDetails",true))text(canvas,String.format(Locale.getDefault(),"%d %% · %.1f km/h",weather.humidity,weather.wind),r.left+pad,r.top+r.height()*.70f,base*.4f,ink,content)
-                        text(canvas,(if(WeatherData.stale(context))StudioUi.text(context,"cached_weather")+" · " else "")+weather.observed.replace('T',' '),r.left+pad,r.top+r.height()*.83f,base*.25f,0xffbec2cb.toInt(),content)
-                        text(canvas,"Open-Meteo · CC BY 4.0",r.left+pad,r.bottom-pad,base*.24f,0xffbec2cb.toInt(),content)
+                    val inset=r.width()*.065f
+                    text(canvas,StudioUi.text(context,"weather").uppercase(Locale.getDefault()),r.left+inset,r.top+r.height()*.18f,base*.32f,0xffbac8d7.toInt(),r.width()*.8f)
+                    if(weather==null){
+                        text(canvas,StudioUi.text(context,"weather_setup"),r.left+inset,r.centerY(),base*.43f,0xfff4f7fb.toInt(),r.width()*.86f)
+                    }else{
+                        text(canvas,String.format(Locale.getDefault(),"%.1f°",weather.temperature),r.left+inset,r.top+r.height()*.48f,min(base*1.75f,r.height()*.33f),0xfff6f9fd.toInt(),r.width()*.60f)
+                        text(canvas,StudioUi.text(context,WeatherData.condition(weather.code)),r.left+inset,r.top+r.height()*.65f,base*.43f,accent,r.width()*.85f)
+                        if(w.options.optBoolean("showDetails",true)){
+                            p.color=0x334d6075;p.style=Paint.Style.FILL
+                            val lineY=r.top+r.height()*.71f
+                            canvas.drawRoundRect(RectF(r.left+inset,lineY,r.right-inset,lineY+maxOf(1f,height*.002f)),height*.003f,height*.003f,p)
+                            text(canvas,String.format(Locale.getDefault(),"%d %%   ·   %.1f km/h",weather.humidity,weather.wind),r.left+inset,r.top+r.height()*.82f,base*.34f,0xffd1d9e5.toInt(),r.width()*.85f)
+                        }
+                        val status=(if(WeatherData.stale(context))StudioUi.text(context,"cached_weather")+" · " else "")+weather.observed.replace('T',' ')
+                        text(canvas,status,r.left+inset,r.top+r.height()*.92f,base*.23f,0xffaab8c8.toInt(),r.width()*.86f)
+                        text(canvas,"Open-Meteo",r.right-inset,r.top+r.height()*.18f,base*.21f,0xffaab8c8.toInt(),r.width()*.30f,align=Paint.Align.RIGHT)
                     }
                 }
                 "activity"->{
