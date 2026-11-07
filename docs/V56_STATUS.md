@@ -68,7 +68,9 @@ GitHub Actions is the build/test environment. Baseline commit `6c535bb` passed.
 First increment: 293 tests, 1 failure in geometry provenance copying; fixed.
 Second increment: 300 tests, 1 fixture failure after adding default Smart View content;
 fixed by explicitly clearing the default content before constructing the test fixture.
-Final run and APK evidence are recorded in `docs/V56_VALIDATION.md` after verification.
+Final verified run: **306 tests passed, 0 test failures; build passed; lint 0 errors,
+382 warnings and 1 hint; APK signature/manifest/archive/hash verified**.
+Exact commit and APK evidence: [V56_VALIDATION.md](V56_VALIDATION.md).
 No Android emulator or Xiaomi device tests have been performed in this environment.
 
 ## Device gate
