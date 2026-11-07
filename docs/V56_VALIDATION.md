@@ -1,3 +1,23 @@
+# V5.6 development 36 — original artwork APK verified
+
+Date: 2026-11-07. **Test build; full V5.6 implementation and hardware acceptance remain open.**
+
+- [Download APK](https://github.com/ahmetokan45-tech/RearStudio/releases/download/v56-dev-36/AHM3T45-STUDIO-V56-development.apk)
+- [Successful build and publication](https://github.com/ahmetokan45-tech/RearStudio/actions/runs/42377816349)
+- Code commit: `b8b8d83f298bf5401f02eccd93c11d6c94f3ab70`.
+- Package `de.rearstudio.v56dev`, versionCode 13, versionName `0.13-v56-development`, label **AHM3T45 V5.6 Test**. Original app retained.
+- **336 tests passed; 0 failures/errors/skips.** `assembleDebug` and `lintDebug` passed. Lint: **0 errors, 491 warnings, 1 hint**.
+- CI APK signature and manifest checks passed. Downloaded release ZIP integrity and SHA-256 independently verified.
+- APK size: **36,434,309 bytes**. SHA-256: `4dc2fcd9f048809d0f52c0a8ad9e85cd2b3d8612ca962909f44d50fad0a9d4aa`.
+- All **15 embedded source images** match the supplied original SHA-256: nine JPG backgrounds, six visible PNG light overlays.
+- Native graphics tests confirm six overlays retain identical decoded pixels at 976×596, fixed aspect ratio, selection persistence, invalid-ID rejection and removing a previous overlay. Background installation preserves bytes.
+- Two fully transparent PNGs are reference-only, excluded from selection. Original overlay effects are static; calculated camera animations remain separately available.
+- **No Xiaomi hardware test performed.** Actual display mapping, event behavior, permissions, touch and thermal/battery performance require device tests.
+
+See [device checklist](V56_DEVICE_TEST_DE.md) and [remaining implementation](V56_STATUS.md). Successful automated checks do not mean complete V5.6 functionality.
+
+---
+
 # V5.6 development 35 — validation evidence
 
 Date: 2026-11-07. This is an expanded **development build, not the complete V5.6 product**.

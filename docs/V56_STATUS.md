@@ -90,9 +90,9 @@ not redrawn, stretched, or substituted by the experimental circle renderer.
 
 ## Automated checks
 
-The final GitHub run for code `465418bf78345754a895bd8653fb09652589be20` passed
-**332 tests with no failures/errors/skips, assembleDebug, lintDebug (0 errors,
-490 warnings + 1 hint), APK signature/manifest validation and release publication**.
+The final GitHub run for code `b8b8d83f298bf5401f02eccd93c11d6c94f3ab70` passed
+**336 tests with no failures/errors/skips, assembleDebug, lintDebug (0 errors,
+491 warnings + 1 hint), APK signature/manifest validation and release publication**.
 The downloaded APK matches the CI SHA-256 and passes ZIP integrity checks.
 Native-rendered fixtures were visually reviewed, including the transparency correction.
 Exact evidence and download: [V56_VALIDATION.md](V56_VALIDATION.md).
@@ -108,5 +108,5 @@ controls, genuine notification privacy, close/swipe/idle behavior, charging
 competition, persistence, animations and battery/thermal behavior. Installation
 alone is not proof that any Xiaomi-specific feature works.
 
-## Original artwork integration (next APK, 0.13)
+## Original artwork integration (verified APK 0.13 / v56-dev-36)
 Nine supplied JPG backgrounds are available in Editor → Hintergrund → Meine Hintergründe, installed byte-for-byte offline. Six visible supplied PNG overlays are selectable per profile under Kamera-Licht → Original Kamera-Lichtebene, including notification and charging profiles. A selected original replaces calculated camera rings. Overlay geometry uses an independent aspect-preserving 976×596 canvas and is unaffected by background crop, pan, zoom, dimming or color adjustments. These are static artwork layers, not newly animated notification effects. Two fully transparent PNG originals are retained only as references and excluded from selection. Device alignment remains unverified; no hardware geometry calibration is inferred from image glow. Existing feature gaps elsewhere in this document remain open. This is a test APK, not a complete V5.6 release.

@@ -48,7 +48,7 @@ nicht zu einer Verkaufsfreigabe oder einer vollständigen V5.6-Abnahme.
 - Tatsächliche Displaygröße, Orientierung, vier Eckradien sowie X/Y/Radius beider
   Linsen bestimmen. Keine Schätzwerte als verifiziert übernehmen.
 - Kritische Inhalte und Bedienelemente dürfen weder Linsen noch Displayrand schneiden.
-- Ohne zwei hinterlegte Kreise muss die Kameralicht-Auswahl gesperrt bleiben.
+- Ohne zwei hinterlegte Kreise bleiben berechnete Kameralicht-Effekte gesperrt. Die gelieferten Original-PNG-Lichtebenen sind unabhängig davon auswählbar; ihre Ausrichtung am Gerät separat prüfen.
 - Mit Kalibrierung: statisch, Puls, Blinken, Welle, Umlauf; Farben, Helligkeit,
   Richtung, Zeit, Wiederholungen sowie Pause/Neustart prüfen.
 - Display aus, Energiesparen und reduzierte Animationen: keine fortlaufenden
@@ -58,7 +58,7 @@ nicht zu einer Verkaufsfreigabe oder einer vollständigen V5.6-Abnahme.
 
 - Erst Vorschau in der App prüfen, dann experimentelle Rückdisplay-Gesten aktivieren.
 - Unten→oben Aktivität; oben→unten Benachrichtigungen; rechts→links Wetter;
-  links→rechts Musik. Wetter/Aktivität melden derzeit ausdrücklich fehlende Datenquellen.
+  links→rechts Musik. Wetter benötigt freigegebene manuelle Koordinaten; Aktivität benötigt die Schrittzähler-Berechtigung. Fehlende oder veraltete Daten dürfen nicht als live erscheinen.
 - X, konfigurierbare Schließgeste und Inaktivität prüfen; Berührung setzt Timer zurück.
   Timer 0 bedeutet aus. Nach Schließen muss dasselbe Standarddesign erscheinen.
 - Kein gleichzeitiges Öffnen der bisherigen Kamera oder Benachrichtigungs-Schublade.
@@ -101,3 +101,13 @@ Zwischenstands schließen diese Entwicklungslücken nicht.
   während Ausschalten darf der Wechselbildschirm nicht aktiv bleiben.
 - Licht-A/B-Vergleich separat pausieren/starten/zurücksetzen; Ein-/Ausblenden,
   Helligkeit/Glow/Linienbreite und Kameraaussparungen kontrollieren.
+
+## Neue Prüfungen für 0.13
+
+- Editor → Hintergrund → Meine Hintergründe: neun gelieferte Fotos/Grafiken zusätzlich zu den bisherigen zehn abstrakten Designs auswählen.
+- Kamera-Licht → Original Kamera-Lichtebene: sechs sichtbare PNG-Vorlagen und Aus auswählen. Jeder Profilwechsel muss seine eigene Auswahl erhalten.
+- Hintergrund verschieben, zoomen, dimmen und einfärben: die Original-Kamerakontur darf sich dabei nicht verändern.
+- Design speichern, App neu starten, exportieren/importieren und im Favoritenwechsler anwenden: Kamera-Vorlage muss erhalten bleiben.
+- Aus wählen: alte Lichtebene muss verschwinden. Berechnete Kameraeffekte dürfen bei aktiver Originalvorlage nicht gleichzeitig erscheinen.
+- Orange Oval und Regenbogenringe auf dem tatsächlichen Rückdisplay mit den hochgeladenen Originalen vergleichen. Abweichungen der Geräteabbildung dokumentieren; Bilder nicht passend zurechtschieben oder verzerren.
+- Die sechs gelieferten Lichtebenen sind statisch. Animierte Effekte mit diesen Original-PNGs sind noch nicht implementiert.
