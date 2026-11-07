@@ -30,7 +30,7 @@ apps' rear-display services concurrently. No existing installation is uninstalle
   brightness, cycle, delay, fades, repeat count, direction; preview play/pause/reset.
   Reduced-motion and power-save disable continuous effects. Lens interiors are
   clipped out of widgets and camera light. No guessed circles are prefilled.
-- Default English and German strings for new controls. Existing locales fall back
+- Default English, German and Turkish strings for new controls. Existing locales fall back
   to English for new controls; this is **not** complete nine-language localization.
 
 ## Remaining implementation (not claimed complete)
